@@ -190,10 +190,6 @@ export function Dashboard() {
             />
             <div className="fixed top-14 bottom-0 left-0 z-50 flex w-[min(100vw,320px)] flex-col shadow-xl">
               <Sidebar
-                searchQuery={searchQuery}
-                searchError={searchError}
-                onSearchQueryChange={setSearchQuery}
-                onSearch={handleSearch}
                 schools={schools}
                 schoolFilterLocked={schoolFilterLocked}
                 draftFilters={draftFilters}

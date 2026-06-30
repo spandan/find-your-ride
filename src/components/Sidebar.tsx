@@ -1,9 +1,7 @@
 "use client";
 
 import type { PreferredContactMethod } from "@/generated/prisma/client";
-import { SAMPLE_SEARCH_ADDRESS } from "@/lib/constants";
 import {
-  buildDefaultFilters,
   type DistanceMiles,
   type MapFilters,
 } from "@/lib/filters";
@@ -24,10 +22,6 @@ const SCHOOL_OPTIONS = [
 ];
 
 type SidebarProps = {
-  searchQuery: string;
-  searchError: string | null;
-  onSearchQueryChange: (value: string) => void;
-  onSearch: (e: React.FormEvent) => void;
   schools: SchoolOption[];
   schoolFilterLocked: boolean;
   draftFilters: MapFilters;
@@ -84,10 +78,6 @@ function DistanceRadios({
 }
 
 export function Sidebar({
-  searchQuery,
-  searchError,
-  onSearchQueryChange,
-  onSearch,
   schools,
   schoolFilterLocked,
   draftFilters,
@@ -135,24 +125,6 @@ export function Sidebar({
 
       <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto p-4">
         <div className="flex flex-col gap-4">
-        <FilterSection title="Your address">
-          <form onSubmit={onSearch} className="flex flex-col gap-2">
-            <input
-              value={searchQuery}
-              onChange={(e) => onSearchQueryChange(e.target.value)}
-              placeholder={SAMPLE_SEARCH_ADDRESS}
-              className="input-field input-compact w-full"
-              aria-label="Search your home address"
-            />
-            <button type="submit" className="btn-subtle w-full">
-              Search
-            </button>
-          </form>
-          {searchError && (
-            <p className="mt-2 text-xs text-red-600">{searchError}</p>
-          )}
-        </FilterSection>
-
         {hasMultipleSchools(schools) && (
           <FilterSection title="School">
             {schoolFilterLocked ? (
