@@ -1,9 +1,11 @@
 import type { GeocodeResult } from "./types";
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+const LOCATIONIQ_URL = "https://us1.locationiq.com/v1/search";
+const NOMINATIM_MIN_INTERVAL_MS = 1100;
 
 /** Frisco, TX area — biases geocoding for local street lookups */
-const FRISCO_VIEWBOX = {
+export const FRISCO_VIEWBOX = {
   west: -96.98,
   south: 33.05,
   east: -96.72,
@@ -16,34 +18,32 @@ type GeocodeOptions = {
   bounded?: boolean;
 };
 
-async function nominatimSearch(
-  params: Record<string, string>
-): Promise<GeocodeResult | null> {
-  const search = new URLSearchParams({
-    format: "json",
-    limit: "1",
-    addressdetails: "1",
-    ...params,
-  });
+type GeocodeProvider = "nominatim" | "locationiq";
 
-  const response = await fetch(`${NOMINATIM_URL}?${search}`, {
-    headers: {
-      "User-Agent": "SchoolPickupShareMap/1.0 (community school pickup tool)",
-    },
-    cache: "no-store",
-  });
+let lastNominatimRequestAt = 0;
+let nominatimQueue: Promise<void> = Promise.resolve();
 
-  if (!response.ok) return null;
+function getGeocodeProvider(): GeocodeProvider {
+  const provider = process.env.GEOCODING_PROVIDER?.trim().toLowerCase();
+  if (provider === "locationiq" && process.env.LOCATIONIQ_API_KEY?.trim()) {
+    return "locationiq";
+  }
+  return "nominatim";
+}
 
-  const results = await response.json();
-  if (!Array.isArray(results) || results.length === 0) return null;
-
-  const hit = results[0];
-  return {
-    latitude: parseFloat(hit.lat),
-    longitude: parseFloat(hit.lon),
-    displayName: hit.display_name as string,
+function scheduleNominatimRequest(): Promise<void> {
+  const run = async () => {
+    const elapsed = Date.now() - lastNominatimRequestAt;
+    const waitMs = NOMINATIM_MIN_INTERVAL_MS - elapsed;
+    if (waitMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+    lastNominatimRequestAt = Date.now();
   };
+
+  const scheduled = nominatimQueue.then(run);
+  nominatimQueue = scheduled.catch(() => undefined);
+  return scheduled;
 }
 
 function withViewboxParams(
@@ -62,6 +62,86 @@ function withViewboxParams(
   return params;
 }
 
+function parseGeocodeHit(hit: {
+  lat: string;
+  lon: string;
+  display_name?: string;
+}): GeocodeResult | null {
+  const latitude = parseFloat(hit.lat);
+  const longitude = parseFloat(hit.lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null;
+  }
+  return {
+    latitude,
+    longitude,
+    displayName: hit.display_name ?? `${latitude}, ${longitude}`,
+  };
+}
+
+async function nominatimSearch(
+  params: Record<string, string>
+): Promise<GeocodeResult | null> {
+  await scheduleNominatimRequest();
+
+  const search = new URLSearchParams({
+    format: "json",
+    limit: "1",
+    addressdetails: "1",
+    ...params,
+  });
+
+  const response = await fetch(`${NOMINATIM_URL}?${search}`, {
+    headers: {
+      "User-Agent":
+        process.env.GEOCODING_USER_AGENT ??
+        "SchoolPickupShareMap/1.0 (community school pickup tool)",
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) return null;
+
+  const results = await response.json();
+  if (!Array.isArray(results) || results.length === 0) return null;
+
+  return parseGeocodeHit(results[0]);
+}
+
+async function locationIqSearch(
+  params: Record<string, string>
+): Promise<GeocodeResult | null> {
+  const apiKey = process.env.LOCATIONIQ_API_KEY?.trim();
+  if (!apiKey) return null;
+
+  const search = new URLSearchParams({
+    key: apiKey,
+    format: "json",
+    limit: "1",
+    ...params,
+  });
+
+  const response = await fetch(`${LOCATIONIQ_URL}?${search}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) return null;
+
+  const results = await response.json();
+  if (!Array.isArray(results) || results.length === 0) return null;
+
+  return parseGeocodeHit(results[0]);
+}
+
+async function providerSearch(
+  params: Record<string, string>
+): Promise<GeocodeResult | null> {
+  if (getGeocodeProvider() === "locationiq") {
+    return locationIqSearch(params);
+  }
+  return nominatimSearch(params);
+}
+
 /**
  * Geocode a free-text location (map search).
  */
@@ -72,7 +152,7 @@ export async function geocodeLocation(
   const query = locationText.trim();
   if (!query) return null;
 
-  return nominatimSearch(
+  return providerSearch(
     withViewboxParams({ q: query }, { countrycodes: "us", ...options })
   );
 }
@@ -90,7 +170,7 @@ export async function geocodeStreetAddress(
   const stateCode = state.trim().toUpperCase();
   if (!street || !cityName || !stateCode) return null;
 
-  const structured = await nominatimSearch(
+  const structured = await providerSearch(
     withViewboxParams(
       {
         street,
@@ -104,7 +184,7 @@ export async function geocodeStreetAddress(
   if (structured) return structured;
 
   const query = `${street}, ${cityName}, ${stateCode}, USA`;
-  return nominatimSearch(
+  return providerSearch(
     withViewboxParams(
       { q: query },
       { countrycodes: "us", viewbox: FRISCO_VIEWBOX, bounded: false }
@@ -112,4 +192,6 @@ export async function geocodeStreetAddress(
   );
 }
 
-export { FRISCO_VIEWBOX };
+export function getActiveGeocodingProvider(): GeocodeProvider {
+  return getGeocodeProvider();
+}

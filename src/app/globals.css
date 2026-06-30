@@ -77,8 +77,12 @@ body {
 }
 
 .maplibregl-ctrl-bottom-right {
-  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px)) !important;
+  bottom: max(2.75rem, calc(env(safe-area-inset-bottom, 0px) + 2rem)) !important;
   right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+}
+
+.map-credits {
+  bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 
 .map-stat-card {
@@ -86,7 +90,7 @@ body {
 }
 
 .map-left-stack {
-  bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  bottom: max(2.75rem, calc(env(safe-area-inset-bottom, 0px) + 2rem));
   left: max(0.75rem, env(safe-area-inset-left, 0px));
 }
 

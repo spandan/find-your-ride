@@ -6,13 +6,13 @@ A privacy-conscious dashboard where parents can add themselves to a shared map a
 
 - **Next.js** (App Router) + React + TypeScript
 - **Tailwind CSS**
-- **OpenStreetMap** via Leaflet / React-Leaflet
+- **MapLibre GL** + **OpenFreeMap** tiles (OpenStreetMap data)
 - **PostgreSQL** + **Prisma**
 
 ## Features
 
-- Interactive map with color-coded family markers (green = Lower School, red = Upper School, orange = Mixed)
-- Address/intersection search with geocoding (OpenStreetMap Nominatim)
+- Interactive map with color-coded family markers (green = K–5, red = 6–12, blue = K–12 mixed)
+- Address/intersection search with geocoding (Nominatim by default; optional LocationIQ)
 - Filters by school group, pickup/drop-off time compatibility, distance, and contact method
 - Add-family form with automatic school group derivation from grades
 - Privacy-conscious location display (intersection/neighborhood preferred, coordinate blurring)
@@ -102,6 +102,36 @@ Open [http://localhost:3000](http://localhost:3000).
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string (required) |
+| `SESSION_SECRET` | Secret for session cookies (required in production) |
+| `GEOCODING_PROVIDER` | `nominatim` (default) or `locationiq` |
+| `GEOCODING_USER_AGENT` | Custom User-Agent for Nominatim (optional) |
+| `LOCATIONIQ_API_KEY` | API key when using LocationIQ geocoding |
+
+## Open-source compliance
+
+This app uses **MapLibre GL**, **OpenFreeMap** tiles, and **OpenStreetMap** data.
+Geocoding uses **Nominatim** by default (strict rate limits) or optional **LocationIQ**.
+
+- Map attribution is shown on the map (© OpenStreetMap, OpenFreeMap, MapLibre).
+- Nominatim usage is throttled to **≤1 request/second** in server code.
+- Full license and policy details: [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md).
+
+### Geocoding providers and rate limits
+
+| Provider | Cost | Typical limits | Notes |
+|----------|------|----------------|-------|
+| **Nominatim** (default) | Free | ~1 req/sec | Public OSM service; fine for low-traffic community use |
+| **LocationIQ** | Free tier + paid | ~5,000/day free | OSM-based; set `GEOCODING_PROVIDER=locationiq` and `LOCATIONIQ_API_KEY` |
+| **OpenFreeMap tiles** | Free | Very generous | Not a bottleneck for this app |
+
+**Map tiles** (OpenFreeMap) are already very permissive — the practical limit is **address search**, not map display. For growth beyond a small parent community, switch to LocationIQ on Railway:
+
+```env
+GEOCODING_PROVIDER=locationiq
+LOCATIONIQ_API_KEY=your_key
+```
+
+Other OSM-based options (Geoapify, Photon/Komoot, self-hosted Nominatim) can be added similarly if needed.
 
 ## Scripts
 
@@ -155,7 +185,7 @@ prisma/
 - [ ] **School-specific access** — restrict map to verified school community
 - [ ] **Moderation** — review queue for new listings and reporting
 - [ ] **Admin dashboard** — display stored analytics (match rate, active vs found ride)
-- [ ] **Rate limiting** on geocoding and listing creation
+- [ ] **Rate limiting** on listing creation (geocoding throttled; see `src/lib/geocode.ts`)
 
 ## License
 

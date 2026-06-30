@@ -19,8 +19,8 @@ import { AddressSearchBar } from "./AddressSearchBar";
 import { AuthModal } from "./AuthModal";
 import { HowItWorksModal } from "./HowItWorksModal";
 import { MapEmptyOverlay } from "./MapEmptyOverlay";
+import { MapCredits } from "./MapCredits";
 import { MapLeftOverlay } from "./MapLeftOverlay";
-import { MapStatsOverlay } from "./MapStatsOverlay";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
 
@@ -223,7 +223,7 @@ export function Dashboard() {
           />
 
           <MapLeftOverlay stats={stats} />
-          <MapStatsOverlay stats={stats} />
+          <MapCredits />
 
           {showEmptyOverlay && (
             <MapEmptyOverlay
