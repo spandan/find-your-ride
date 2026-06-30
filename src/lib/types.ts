@@ -42,6 +42,7 @@ export type SessionUser = {
   status: ListingStatus;
   displayLatitude: number;
   displayLongitude: number;
+  hasAcceptedAgreement: boolean;
 };
 
 export type SignupInput = {
@@ -60,7 +61,7 @@ export type SignupInput = {
   showContactInfo?: boolean;
   loginId: string;
   passcode: string;
-  consentGiven: boolean;
+  agreementAccepted: boolean;
 };
 
 export type LoginInput = {

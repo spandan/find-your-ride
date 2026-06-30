@@ -4,11 +4,17 @@ import { useEffect, type ReactNode } from "react";
 
 type AppModalProps = {
   children: ReactNode;
-  onClose: () => void;
+  onClose?: () => void;
   labelledBy: string;
+  dismissible?: boolean;
 };
 
-export function AppModal({ children, onClose, labelledBy }: AppModalProps) {
+export function AppModal({
+  children,
+  onClose,
+  labelledBy,
+  dismissible = true,
+}: AppModalProps) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -20,7 +26,7 @@ export function AppModal({ children, onClose, labelledBy }: AppModalProps) {
   return (
     <div
       className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-sm sm:p-4"
-      onClick={onClose}
+      onClick={dismissible ? onClose : undefined}
     >
       <div
         className="max-h-[min(92dvh,calc(100dvh-1.5rem))] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6"

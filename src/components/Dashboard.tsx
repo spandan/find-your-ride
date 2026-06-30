@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getCurrentUser } from "@/actions/auth";
+import { getCurrentUser, acceptAgreement, logout } from "@/actions/auth";
 import { geocodeSearch, getCommunityStats, getMapListings } from "@/actions/listings";
 import { getSchools } from "@/actions/schools";
 import { DEFAULT_MAP_CENTER, type MapCenter } from "@/lib/constants";
@@ -17,6 +17,7 @@ import { DEFAULT_SCHOOL_ID } from "@/lib/schools";
 import type { CommunityStats, MapListing, SessionUser } from "@/lib/types";
 import { AddressSearchBar } from "./AddressSearchBar";
 import { AuthModal } from "./AuthModal";
+import { AgreementModal } from "./AgreementModal";
 import { HowItWorksModal } from "./HowItWorksModal";
 import { MapEmptyOverlay } from "./MapEmptyOverlay";
 import { MapCredits } from "./MapCredits";
@@ -69,6 +70,8 @@ export function Dashboard() {
     buildDefaultFilters()
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [acceptingAgreement, setAcceptingAgreement] = useState(false);
+  const [agreementError, setAgreementError] = useState<string | null>(null);
 
   const loadData = useCallback(async (schoolId?: string) => {
     const [schoolList, currentUser] = await Promise.all([
@@ -101,7 +104,9 @@ export function Dashboard() {
     [listings, searchOrigin, appliedFilters]
   );
 
-  const schoolFilterLocked = Boolean(user);
+  const schoolFilterLocked = Boolean(user?.hasAcceptedAgreement);
+  const hasFullAccess = Boolean(user?.hasAcceptedAgreement);
+  const needsAgreement = Boolean(user && !user.hasAcceptedAgreement);
 
   function handleToggleFilters() {
     setFiltersOpen((open) => !open);
@@ -167,6 +172,24 @@ export function Dashboard() {
     }
   }
 
+  async function handleAcceptAgreement() {
+    setAgreementError(null);
+    setAcceptingAgreement(true);
+    const result = await acceptAgreement();
+    setAcceptingAgreement(false);
+    if (!result.success) {
+      setAgreementError(result.error);
+      return;
+    }
+    await loadData();
+  }
+
+  async function handleAgreementLogout() {
+    await logout();
+    setAgreementError(null);
+    await loadData();
+  }
+
   const showEmptyOverlay = filteredListings.length === 0;
 
   return (
@@ -217,7 +240,7 @@ export function Dashboard() {
             zoom={mapCenter.zoom}
             listings={filteredListings}
             selectedId={selectedId}
-            isLoggedIn={!!user}
+            isLoggedIn={hasFullAccess}
             onSelectListing={setSelectedId}
             onLogin={() => setAuthMode("login")}
           />
@@ -236,6 +259,21 @@ export function Dashboard() {
 
       {showHowItWorks && (
         <HowItWorksModal onClose={() => setShowHowItWorks(false)} />
+      )}
+
+      {needsAgreement && (
+        <AgreementModal
+          dismissible={false}
+          submitting={acceptingAgreement}
+          onAccept={handleAcceptAgreement}
+          onLogout={handleAgreementLogout}
+        />
+      )}
+
+      {agreementError && needsAgreement && (
+        <div className="fixed inset-x-4 top-20 z-[2100] rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 shadow-lg sm:left-1/2 sm:w-96 sm:-translate-x-1/2">
+          {agreementError}
+        </div>
       )}
 
       {authMode && (

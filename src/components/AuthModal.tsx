@@ -8,19 +8,21 @@ import {
   resetPasscode,
   signup,
 } from "@/actions/auth";
-import { CONTACT_METHODS, RESET_IDENTITY_MISMATCH_MESSAGE, SAFETY_DISCLAIMER } from "@/lib/constants";
+import { CONTACT_METHODS, RESET_IDENTITY_MISMATCH_MESSAGE } from "@/lib/constants";
 import {
   looksLikeEmail,
   preferredMethodNeedsPhone,
   validateSignupContact,
 } from "@/lib/contact-validation";
 import { DEFAULT_SCHOOL_ID, DEFAULT_SCHOOL_NAME, hasMultipleSchools, type SchoolOption } from "@/lib/schools";
-import type { SessionUser } from "@/lib/types";
+import type { SessionUser, SignupInput } from "@/lib/types";
+import { AgreementContent } from "./AgreementContent";
 import { PasscodeInput } from "./PasscodeInput";
 import { AppModal } from "./AppModal";
 import { ProfileModal } from "./ProfileModal";
 
 type AuthMode = "login" | "signup" | "reset";
+type SignupStep = "form" | "agreement";
 
 type AuthModalProps = {
   mode: AuthMode;
@@ -46,6 +48,8 @@ export function AuthModal({
     useState<PreferredContactMethod>("EMAIL");
   const [signupSchoolId, setSignupSchoolId] = useState<string>(DEFAULT_SCHOOL_ID);
   const [contactEmailEdited, setContactEmailEdited] = useState(false);
+  const [signupStep, setSignupStep] = useState<SignupStep>("form");
+  const [pendingSignup, setPendingSignup] = useState<Omit<SignupInput, "agreementAccepted"> | null>(null);
 
   useEffect(() => {
     if (mode === "signup") {
@@ -55,6 +59,8 @@ export function AuthModal({
       setSignupPreferredMethod("EMAIL");
       setSignupSchoolId(schools[0]?.id ?? DEFAULT_SCHOOL_ID);
       setContactEmailEdited(false);
+      setSignupStep("form");
+      setPendingSignup(null);
       setError(null);
     }
   }, [mode, schools]);
@@ -88,7 +94,7 @@ export function AuthModal({
     onClose();
   }
 
-  async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSignupForm(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
@@ -110,8 +116,7 @@ export function AuthModal({
       return;
     }
 
-    setSubmitting(true);
-    const result = await signup({
+    setPendingSignup({
       firstName: form.get("firstName") as string,
       lastName: form.get("lastName") as string,
       contactEmail: signupContactEmail,
@@ -127,11 +132,22 @@ export function AuthModal({
       showContactInfo: form.get("showContactInfo") === "on",
       loginId: signupLoginId,
       passcode: form.get("passcode") as string,
-      consentGiven: form.get("consentGiven") === "on",
+    });
+    setSignupStep("agreement");
+  }
+
+  async function handleSignupComplete() {
+    if (!pendingSignup) return;
+    setError(null);
+    setSubmitting(true);
+    const result = await signup({
+      ...pendingSignup,
+      agreementAccepted: true,
     });
     setSubmitting(false);
     if (!result.success) {
       setError(result.error);
+      setSignupStep("form");
       return;
     }
     onSuccess({
@@ -139,6 +155,12 @@ export function AuthModal({
       lng: result.lng,
       listingId: result.listingId,
     });
+    onClose();
+  }
+
+  function handleSignupAgreementCancel() {
+    setPendingSignup(null);
+    setSignupStep("form");
     onClose();
   }
 
@@ -175,18 +197,27 @@ export function AuthModal({
 
   const titles: Record<AuthMode, string> = {
     login: "Log in",
-    signup: "Sign up",
+    signup: signupStep === "agreement" ? "Before You Continue" : "Sign up",
     reset: "Reset passcode",
   };
 
+  function handleClose() {
+    if (mode === "signup" && signupStep === "agreement") {
+      handleSignupAgreementCancel();
+      return;
+    }
+    onClose();
+  }
+
   return (
-    <AppModal onClose={onClose} labelledBy="auth-title">
+    <AppModal onClose={handleClose} labelledBy="auth-title">
+        {!(mode === "signup" && signupStep === "agreement") && (
         <div className="mb-5 flex items-start justify-between">
           <div>
             <h2 id="auth-title" className="text-lg font-bold text-slate-900">
               {titles[mode]}
             </h2>
-            {mode === "signup" && (
+            {mode === "signup" && signupStep === "form" && (
               <p className="mt-1 text-xs text-slate-500">
                 Your name is used only to reset your passcode — never shown on
                 the map.
@@ -200,7 +231,7 @@ export function AuthModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             aria-label="Close"
           >
@@ -209,6 +240,7 @@ export function AuthModal({
             </svg>
           </button>
         </div>
+        )}
 
         {error && (
           <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
@@ -286,8 +318,8 @@ export function AuthModal({
           </form>
         )}
 
-        {mode === "signup" && (
-          <form onSubmit={handleSignup} className="space-y-3">
+        {mode === "signup" && signupStep === "form" && (
+          <form onSubmit={handleSignupForm} className="space-y-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="field-label">First name *</span>
@@ -441,14 +473,20 @@ export function AuthModal({
               Your passcode is stored as a one-way salted hash — we never save
               or display the plain text.
             </p>
-            <label className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <input name="consentGiven" type="checkbox" required className="mt-0.5 rounded" />
-              <span className="text-xs leading-relaxed text-slate-600">{SAFETY_DISCLAIMER}</span>
-            </label>
-            <button type="submit" disabled={submitting} className="btn-success w-full">
-              {submitting ? "Creating account…" : "Sign up & appear on map"}
+            <button type="submit" className="btn-success w-full">
+              Continue to agreement
             </button>
           </form>
+        )}
+
+        {mode === "signup" && signupStep === "agreement" && (
+          <AgreementContent
+            acceptLabel="Agree & Create Account"
+            submitting={submitting}
+            showCancel
+            onAccept={handleSignupComplete}
+            onCancel={handleSignupAgreementCancel}
+          />
         )}
     </AppModal>
   );

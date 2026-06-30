@@ -3,10 +3,16 @@
 import { revalidatePath } from "next/cache";
 import type { PreferredContactMethod } from "@/generated/prisma/client";
 import { recordListingCreated } from "@/lib/analytics";
+import {
+  AGREEMENT_REQUIRED,
+  agreementAcceptanceData,
+  hasAcceptedCurrentAgreement,
+} from "@/lib/agreement";
 import { geocodeStreetAddress } from "@/lib/geocode";
 import { blurCoordinates } from "@/lib/location";
 import { hashPasscode, validatePasscode, verifyPasscode, assertStoredPasscodeIsHashed } from "@/lib/passcode";
 import { prisma } from "@/lib/prisma";
+import { getClientIpAddress } from "@/lib/request";
 import { RESET_IDENTITY_MISMATCH_MESSAGE, SIGNUP_DUPLICATE_NAME_MESSAGE } from "@/lib/constants";
 import { getSchoolById } from "@/actions/schools";
 import {
@@ -87,7 +93,37 @@ async function findListingForPasscodeReset(input: {
   });
 }
 
-export async function getCurrentUser(): Promise<SessionUser | null> {
+const agreementSelect = {
+  agreementAccepted: true,
+  agreementVersion: true,
+} as const;
+
+function toSessionUser(
+  listing: {
+    id: string;
+    firstName: string;
+    schoolId: string;
+    schoolName: string;
+    status: SessionUser["status"];
+    displayLatitude: number;
+    displayLongitude: number;
+    agreementAccepted: boolean;
+    agreementVersion: string | null;
+  }
+): SessionUser {
+  return {
+    listingId: listing.id,
+    firstName: listing.firstName,
+    schoolId: listing.schoolId,
+    schoolName: listing.schoolName,
+    status: listing.status,
+    displayLatitude: listing.displayLatitude,
+    displayLongitude: listing.displayLongitude,
+    hasAcceptedAgreement: hasAcceptedCurrentAgreement(listing),
+  };
+}
+
+async function getAuthenticatedListing() {
   const session = await getSession();
   if (!session) return null;
 
@@ -101,6 +137,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       status: true,
       displayLatitude: true,
       displayLongitude: true,
+      ...agreementSelect,
     },
   });
 
@@ -109,15 +146,39 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  return {
-    listingId: listing.id,
-    firstName: listing.firstName,
-    schoolId: listing.schoolId,
-    schoolName: listing.schoolName,
-    status: listing.status,
-    displayLatitude: listing.displayLatitude,
-    displayLongitude: listing.displayLongitude,
-  };
+  return listing;
+}
+
+export async function getCurrentUser(): Promise<SessionUser | null> {
+  const listing = await getAuthenticatedListing();
+  if (!listing) return null;
+  return toSessionUser(listing);
+}
+
+export async function acceptAgreement(): Promise<
+  { success: true } | { success: false; error: string }
+> {
+  const listing = await getAuthenticatedListing();
+  if (!listing) {
+    return { success: false, error: "Please log in first." };
+  }
+
+  if (hasAcceptedCurrentAgreement(listing)) {
+    return { success: true };
+  }
+
+  const ipAddress = await getClientIpAddress();
+
+  await prisma.familyListing.update({
+    where: { id: listing.id },
+    data: {
+      ...agreementAcceptanceData(),
+      agreementIpAddress: ipAddress,
+    },
+  });
+
+  revalidatePath("/");
+  return { success: true };
 }
 
 export async function signup(
@@ -126,8 +187,11 @@ export async function signup(
   | { success: true; lat: number; lng: number; listingId: string }
   | { success: false; error: string }
 > {
-  if (!input.consentGiven) {
-    return { success: false, error: "You must agree to the safety disclaimer." };
+  if (AGREEMENT_REQUIRED && !input.agreementAccepted) {
+    return {
+      success: false,
+      error: "You must accept the user agreement to create an account.",
+    };
   }
 
   const passcodeError = validatePasscode(input.passcode);
@@ -212,6 +276,7 @@ export async function signup(
   const passcodeHash = await hashPasscode(input.passcode);
   assertStoredPasscodeIsHashed(passcodeHash, input.passcode);
   const lastInitial = lastName.charAt(0).toUpperCase();
+  const ipAddress = await getClientIpAddress();
 
   const listing = await prisma.familyListing.create({
     data: {
@@ -240,7 +305,8 @@ export async function signup(
       schoolName: school.name,
       schoolGroup,
       sharingIntent: input.sharingIntent ?? "BOTH",
-      consentGiven: true,
+      ...agreementAcceptanceData(),
+      agreementIpAddress: ipAddress,
       passcodeHash,
       status: "ACTIVE",
     },
@@ -273,7 +339,7 @@ export async function signup(
 export async function login(
   input: LoginInput
 ): Promise<
-  | { success: true; lat: number; lng: number }
+  | { success: true; lat: number; lng: number; needsAgreement: boolean }
   | { success: false; error: string }
 > {
   const passcodeError = validatePasscode(input.passcode);
@@ -295,6 +361,7 @@ export async function login(
     success: true,
     lat: listing.displayLatitude,
     lng: listing.displayLongitude,
+    needsAgreement: !hasAcceptedCurrentAgreement(listing),
   };
 }
 
@@ -344,27 +411,30 @@ export async function resetPasscode(
 export async function markFoundMyRide(): Promise<
   { success: true } | { success: false; error: string }
 > {
-  const session = await getSession();
-  if (!session) return { success: false, error: "Please log in first." };
+  const listing = await getAuthenticatedListing();
+  if (!listing) return { success: false, error: "Please log in first." };
+  if (!hasAcceptedCurrentAgreement(listing)) {
+    return { success: false, error: "Please accept the user agreement to continue." };
+  }
 
-  const listing = await prisma.familyListing.findUnique({
-    where: { id: session.listingId },
+  const fullListing = await prisma.familyListing.findUnique({
+    where: { id: listing.id },
   });
 
-  if (!listing || listing.status === "DELETED") {
+  if (!fullListing || fullListing.status === "DELETED") {
     return { success: false, error: "Listing not found." };
   }
 
-  if (listing.status === "FOUND_RIDE") {
+  if (fullListing.status === "FOUND_RIDE") {
     return { success: false, error: "Already marked as found ride." };
   }
 
-  if (listing.status !== "ACTIVE") {
+  if (fullListing.status !== "ACTIVE") {
     return { success: false, error: "Listing is not active." };
   }
 
   await prisma.familyListing.update({
-    where: { id: listing.id },
+    where: { id: fullListing.id },
     data: { status: "FOUND_RIDE", foundRideAt: new Date() },
   });
 
@@ -375,23 +445,26 @@ export async function markFoundMyRide(): Promise<
 export async function deactivateMyListing(): Promise<
   { success: true } | { success: false; error: string }
 > {
-  const session = await getSession();
-  if (!session) return { success: false, error: "Please log in first." };
+  const listing = await getAuthenticatedListing();
+  if (!listing) return { success: false, error: "Please log in first." };
+  if (!hasAcceptedCurrentAgreement(listing)) {
+    return { success: false, error: "Please accept the user agreement to continue." };
+  }
 
-  const listing = await prisma.familyListing.findUnique({
-    where: { id: session.listingId },
+  const fullListing = await prisma.familyListing.findUnique({
+    where: { id: listing.id },
   });
 
-  if (!listing || listing.status === "DELETED") {
+  if (!fullListing || fullListing.status === "DELETED") {
     return { success: false, error: "Listing not found." };
   }
 
-  if (listing.status === "DEACTIVATED") {
+  if (fullListing.status === "DEACTIVATED") {
     return { success: false, error: "Listing is already deactivated." };
   }
 
   await prisma.familyListing.update({
-    where: { id: listing.id },
+    where: { id: fullListing.id },
     data: { status: "DEACTIVATED", deactivatedAt: new Date() },
   });
 
@@ -400,11 +473,12 @@ export async function deactivateMyListing(): Promise<
 }
 
 export async function getMyProfile(): Promise<UserProfile | null> {
-  const session = await getSession();
-  if (!session) return null;
+  const listing = await getAuthenticatedListing();
+  if (!listing) return null;
+  if (!hasAcceptedCurrentAgreement(listing)) return null;
 
-  const listing = await prisma.familyListing.findUnique({
-    where: { id: session.listingId },
+  const profile = await prisma.familyListing.findUnique({
+    where: { id: listing.id },
     select: {
       firstName: true,
       lastName: true,
@@ -418,26 +492,29 @@ export async function getMyProfile(): Promise<UserProfile | null> {
     },
   });
 
-  if (!listing || listing.status === "DELETED") {
+  if (!profile || profile.status === "DELETED") {
     await clearSession();
     return null;
   }
 
-  return listing;
+  return profile;
 }
 
 export async function updateMyProfile(
   input: UpdateProfileInput
 ): Promise<{ success: true } | { success: false; error: string }> {
-  const session = await getSession();
-  if (!session) return { success: false, error: "Please log in first." };
+  const listing = await getAuthenticatedListing();
+  if (!listing) return { success: false, error: "Please log in first." };
+  if (!hasAcceptedCurrentAgreement(listing)) {
+    return { success: false, error: "Please accept the user agreement to continue." };
+  }
 
-  const listing = await prisma.familyListing.findUnique({
-    where: { id: session.listingId },
+  const existing = await prisma.familyListing.findUnique({
+    where: { id: listing.id },
     select: { id: true, username: true, status: true },
   });
 
-  if (!listing || listing.status === "DELETED") {
+  if (!existing || existing.status === "DELETED") {
     return { success: false, error: "Listing not found." };
   }
 
@@ -451,13 +528,13 @@ export async function updateMyProfile(
     input.preferredContactMethod,
     input.contactEmail,
     input.contactPhone,
-    listing.username
+    existing.username
   );
   if (contactError) {
     return { success: false, error: contactError };
   }
 
-  const contactEmail = resolveContactEmail(input.contactEmail, listing.username);
+  const contactEmail = resolveContactEmail(input.contactEmail, existing.username);
   if (!contactEmail) {
     return {
       success: false,
@@ -471,7 +548,7 @@ export async function updateMyProfile(
       status: { not: "DELETED" },
       firstName: { equals: firstName, mode: "insensitive" },
       lastName: { equals: lastName, mode: "insensitive" },
-      NOT: { id: listing.id },
+      NOT: { id: existing.id },
     },
   });
   if (nameConflict) {
@@ -480,7 +557,7 @@ export async function updateMyProfile(
 
   const lastInitial = lastName.charAt(0).toUpperCase();
   await prisma.familyListing.update({
-    where: { id: listing.id },
+    where: { id: existing.id },
     data: {
       firstName,
       lastName,

@@ -5,6 +5,7 @@ import { resolveDatabaseUrl, withDatabaseSsl } from "../src/lib/database-url";
 import { blurCoordinates } from "../src/lib/location";
 import { SEED_SCHOOLS } from "../src/lib/schools";
 import { hashPasscode } from "../src/lib/passcode";
+import { AGREEMENT_VERSION, agreementAcceptanceData } from "../src/lib/agreement";
 import { deriveSchoolGroup } from "../src/lib/school";
 
 const adapter = new PrismaPg({
@@ -252,7 +253,7 @@ async function main() {
         showPersonalInfo: true,
         pickupTimePreference: status === "ACTIVE" ? "3:35 PM" : "Flexible",
         dropoffTimePreference: status === "ACTIVE" ? "7:30 AM" : "Flexible",
-        consentGiven: true,
+        ...agreementAcceptanceData(AGREEMENT_VERSION),
         status,
         passcodeHash: demoPasscodeHash,
         foundRideAt: status === "FOUND_RIDE" ? new Date() : null,

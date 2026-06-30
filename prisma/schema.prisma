@@ -85,6 +85,10 @@ model FamilyListing {
   sharingIntent            SharingIntent          @default(BOTH)
   notes                    String?
   consentGiven             Boolean                @default(false)
+  agreementAccepted        Boolean                @default(false)
+  agreementVersion         String?
+  agreementAcceptedAt      DateTime?
+  agreementIpAddress       String?
   status                   ListingStatus          @default(ACTIVE)
   passcodeHash             String                 @default("") // scrypt salted hash only — never plaintext
   foundRideAt              DateTime?

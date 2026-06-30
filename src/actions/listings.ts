@@ -8,6 +8,20 @@ import type { CommunityStats, MapListing } from "@/lib/types";
 
 const VISIBLE_STATUSES = ["ACTIVE", "FOUND_RIDE", "DEACTIVATED"] as const;
 
+function stripSensitiveListingFields(
+  listing: MapListing,
+  viewerCanSeeContacts: boolean
+): MapListing {
+  if (viewerCanSeeContacts) return listing;
+  return {
+    ...listing,
+    contactEmail: "",
+    contactPhone: null,
+    showContactInfo: false,
+    showPersonalInfo: false,
+  };
+}
+
 const listingSelect = {
   id: true,
   parentDisplayName: true,
@@ -58,15 +72,20 @@ export async function getMapListings(
   const schoolId = await resolveSchoolScope(requestedSchoolId);
   if (!schoolId) return [];
 
-  return prisma.familyListing
-    .findMany({
-      where: {
-        status: { in: [...VISIBLE_STATUSES] },
-        schoolId,
-      },
-      select: listingSelect,
-    })
-    .then((rows) => rows.map(toMapListing));
+  const user = await getCurrentUser();
+  const viewerCanSeeContacts = Boolean(user?.hasAcceptedAgreement);
+
+  const rows = await prisma.familyListing.findMany({
+    where: {
+      status: { in: [...VISIBLE_STATUSES] },
+      schoolId,
+    },
+    select: listingSelect,
+  });
+
+  return rows
+    .map(toMapListing)
+    .map((listing) => stripSensitiveListingFields(listing, viewerCanSeeContacts));
 }
 
 export async function getCommunityStats(
