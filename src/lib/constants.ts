@@ -1,7 +1,14 @@
+/** Imagine International Academy (Virginia Pkwy, McKinney/Frisco) */
+export const DEFAULT_SCHOOL_MAP = {
+  lat: 33.1975,
+  lng: -96.698,
+} as const;
+
+/** Default view: school centered, zoom fits Frisco, McKinney & Allen */
 export const DEFAULT_MAP_CENTER = {
-  lat: 33.1507,
-  lng: -96.8236,
-  zoom: 12,
+  lat: DEFAULT_SCHOOL_MAP.lat,
+  lng: DEFAULT_SCHOOL_MAP.lng,
+  zoom: 10,
 };
 
 /** OpenFreeMap vector style — free, no API key (MapLibre GL) */
