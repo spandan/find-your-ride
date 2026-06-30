@@ -2,7 +2,6 @@
 
 import type { PreferredContactMethod } from "@/generated/prisma/client";
 import {
-  type DistanceMiles,
   type MapFilters,
 } from "@/lib/filters";
 import type { SchoolOption } from "@/lib/schools";
@@ -43,36 +42,6 @@ function FilterSection({
     <div className="rounded-xl border border-slate-200 bg-white p-3.5">
       <p className="text-xs font-semibold text-slate-900">{title}</p>
       <div className="mt-2.5">{children}</div>
-    </div>
-  );
-}
-
-function DistanceRadios({
-  value,
-  onChange,
-  name,
-}: {
-  value: DistanceMiles;
-  onChange: (miles: DistanceMiles) => void;
-  name: string;
-}) {
-  return (
-    <div className="space-y-2">
-      {([1, 2, 5] as const).map((miles) => (
-        <label
-          key={miles}
-          className="flex cursor-pointer items-center gap-2 text-sm text-slate-700"
-        >
-          <input
-            type="radio"
-            name={name}
-            checked={value === miles}
-            onChange={() => onChange(miles)}
-            className="text-blue-800 focus:ring-blue-500"
-          />
-          {miles} mile{miles === 1 ? "" : "s"}
-        </label>
-      ))}
     </div>
   );
 }
@@ -190,14 +159,6 @@ export function Sidebar({
                 Found Ride
               </label>
             </div>
-          </FilterSection>
-
-          <FilterSection title="Distance">
-            <DistanceRadios
-              name="sidebar-distance"
-              value={draftFilters.distanceMiles}
-              onChange={(distanceMiles) => update({ distanceMiles })}
-            />
           </FilterSection>
 
           <FilterSection title="Looking for">

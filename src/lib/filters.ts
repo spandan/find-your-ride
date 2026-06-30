@@ -3,10 +3,7 @@ import { DEFAULT_SCHOOL_ID } from "@/lib/schools";
 import { calculateDistance } from "@/lib/location";
 import type { MapListing } from "@/lib/types";
 
-export type DistanceMiles = 1 | 2 | 5;
-
 export type MapFilters = {
-  distanceMiles: DistanceMiles;
   schoolId: string;
   schoolGroups: Record<SchoolGroup, boolean>;
   showFoundRide: boolean;
@@ -20,7 +17,6 @@ export type MapFilters = {
 };
 
 const BASE_FILTERS: Omit<MapFilters, "schoolId"> = {
-  distanceMiles: 2,
   schoolGroups: { LOWER: true, UPPER: true, MIXED: true },
   showFoundRide: true,
   showDeactivated: false,
@@ -36,11 +32,8 @@ export const DEFAULT_FILTERS: MapFilters = buildDefaultFilters();
 
 export type ListingWithDistance = MapListing & { distanceMiles: number };
 
-export function zoomForRadius(miles: DistanceMiles): number {
-  if (miles <= 1) return 14;
-  if (miles <= 2) return 13;
-  return 12;
-}
+export const SEARCH_MAP_ZOOM = 14;
+export const USER_LOCATION_MAP_ZOOM = 14;
 
 export function formatApproximateLocation(listing: MapListing): string {
   if (listing.streetName) {
@@ -80,7 +73,6 @@ export function filterListings(
     }))
     .filter((listing) => {
       if (listing.schoolId !== filters.schoolId) return false;
-      if (listing.distanceMiles > filters.distanceMiles) return false;
 
       if (listing.status === "FOUND_RIDE" && !filters.showFoundRide) return false;
       if (listing.status === "DEACTIVATED" && !filters.showDeactivated) return false;

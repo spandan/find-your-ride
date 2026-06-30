@@ -9,8 +9,9 @@ import { DEFAULT_MAP_CENTER, type MapCenter } from "@/lib/constants";
 import {
   buildDefaultFilters,
   filterListings,
+  SEARCH_MAP_ZOOM,
+  USER_LOCATION_MAP_ZOOM,
   type MapFilters,
-  zoomForRadius,
 } from "@/lib/filters";
 import type { SchoolOption } from "@/lib/schools";
 import { DEFAULT_SCHOOL_ID } from "@/lib/schools";
@@ -19,7 +20,6 @@ import { AddressSearchBar } from "./AddressSearchBar";
 import { AuthModal } from "./AuthModal";
 import { AgreementModal } from "./AgreementModal";
 import { HowItWorksModal } from "./HowItWorksModal";
-import { MapEmptyOverlay } from "./MapEmptyOverlay";
 import { MapCredits } from "./MapCredits";
 import { MapLeftOverlay } from "./MapLeftOverlay";
 import { Sidebar } from "./Sidebar";
@@ -46,6 +46,23 @@ function filtersForUser(
   const fallbackSchoolId = schools[0]?.id ?? DEFAULT_SCHOOL_ID;
   const schoolId = user?.schoolId ?? fallbackSchoolId;
   return buildDefaultFilters(schoolId);
+}
+
+function mapViewForUser(user: SessionUser | null): {
+  center: MapCenter;
+  origin: { lat: number; lng: number };
+} {
+  if (user) {
+    const { displayLatitude: lat, displayLongitude: lng } = user;
+    return {
+      center: { lat, lng, zoom: USER_LOCATION_MAP_ZOOM },
+      origin: { lat, lng },
+    };
+  }
+  return {
+    center: DEFAULT_MAP_CENTER,
+    origin: { lat: DEFAULT_MAP_CENTER.lat, lng: DEFAULT_MAP_CENTER.lng },
+  };
 }
 
 export function Dashboard() {
@@ -93,6 +110,10 @@ export function Dashboard() {
     setStats(communityStats);
     setAppliedFilters({ ...nextFilters, schoolId: effectiveSchoolId });
     setDraftFilters({ ...nextFilters, schoolId: effectiveSchoolId });
+
+    const { center, origin } = mapViewForUser(currentUser);
+    setMapCenter(center);
+    setSearchOrigin(origin);
   }, []);
 
   useEffect(() => {
@@ -123,17 +144,13 @@ export function Dashboard() {
       return;
     }
 
-    const zoom = zoomForRadius(appliedFilters.distanceMiles);
+    const zoom = SEARCH_MAP_ZOOM;
     setSearchOrigin({ lat: result.lat, lng: result.lng });
     setMapCenter({ lat: result.lat, lng: result.lng, zoom });
   }
 
   async function handleApplyFilters() {
     setAppliedFilters(draftFilters);
-    setMapCenter((prev) => ({
-      ...prev,
-      zoom: zoomForRadius(draftFilters.distanceMiles),
-    }));
     setFiltersOpen(false);
 
     if (!user && draftFilters.schoolId !== appliedFilters.schoolId) {
@@ -152,13 +169,6 @@ export function Dashboard() {
     setAppliedFilters(next);
   }
 
-  function handleExpandRadius(miles: MapFilters["distanceMiles"]) {
-    const next = { ...appliedFilters, distanceMiles: miles };
-    setAppliedFilters(next);
-    setDraftFilters(next);
-    setMapCenter((prev) => ({ ...prev, zoom: zoomForRadius(miles) }));
-  }
-
   function handleAuthSuccess(coords?: {
     lat: number;
     lng: number;
@@ -167,7 +177,7 @@ export function Dashboard() {
     loadData();
     if (coords) {
       setSearchOrigin({ lat: coords.lat, lng: coords.lng });
-      setMapCenter({ lat: coords.lat, lng: coords.lng, zoom: 15 });
+      setMapCenter({ lat: coords.lat, lng: coords.lng, zoom: USER_LOCATION_MAP_ZOOM });
       if (coords.listingId) setSelectedId(coords.listingId);
     }
   }
@@ -189,8 +199,6 @@ export function Dashboard() {
     setAgreementError(null);
     await loadData();
   }
-
-  const showEmptyOverlay = filteredListings.length === 0;
 
   return (
     <div className="flex h-dvh min-h-dvh flex-col bg-[#F8FAFC]">
@@ -247,13 +255,6 @@ export function Dashboard() {
 
           <MapLeftOverlay stats={stats} />
           <MapCredits />
-
-          {showEmptyOverlay && (
-            <MapEmptyOverlay
-              distanceMiles={appliedFilters.distanceMiles}
-              onExpandRadius={handleExpandRadius}
-            />
-          )}
         </main>
       </div>
 
