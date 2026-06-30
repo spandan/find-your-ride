@@ -20,15 +20,21 @@ export function AppLogo({ className = "", showName = true }: AppLogoProps) {
           <Image
             src={APP_LOGO_ICON_PATH}
             alt=""
-            width={48}
-            height={48}
+            width={56}
+            height={56}
             className="app-logo__icon"
             onError={() => setLogoMissing(true)}
             priority
           />
         </span>
       )}
-      {showName && <span className="app-logo__name">{APP_NAME}</span>}
+      {showName && (
+        <span className="app-logo__name" aria-hidden>
+          <span className="app-logo__word app-logo__word--find">Find</span>
+          <span className="app-logo__word app-logo__word--your">Your</span>
+          <span className="app-logo__word app-logo__word--ride">Ride</span>
+        </span>
+      )}
     </Link>
   );
 }

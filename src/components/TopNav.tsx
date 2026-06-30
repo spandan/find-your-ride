@@ -20,7 +20,7 @@ export function TopNav({
   onUserChange,
 }: TopNavProps) {
   return (
-    <header className="app-header z-30 flex h-14 shrink-0 items-center justify-between gap-3 px-4 lg:px-5">
+    <header className="app-header z-30 flex h-16 shrink-0 items-center justify-between gap-3 px-4 lg:px-5">
       <div className="flex min-w-0 items-center">
         <AppLogo />
       </div>

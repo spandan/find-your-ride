@@ -214,11 +214,11 @@ export function Dashboard() {
           <>
             <button
               type="button"
-              className="fixed inset-0 top-14 z-40 bg-slate-900/30"
+              className="fixed inset-0 top-16 z-40 bg-slate-900/30"
               onClick={() => setFiltersOpen(false)}
               aria-label="Close filters"
             />
-            <div className="fixed top-14 bottom-0 left-0 z-50 flex w-[min(100vw,320px)] flex-col shadow-xl">
+            <div className="fixed top-16 bottom-0 left-0 z-50 flex w-[min(100vw,320px)] flex-col shadow-xl">
               <Sidebar
                 schools={schools}
                 schoolFilterLocked={schoolFilterLocked}

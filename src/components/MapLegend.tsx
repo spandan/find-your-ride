@@ -16,7 +16,7 @@ export function MapLegend() {
         {LEGEND_ITEMS.map(({ group, label }) => (
           <li key={group} className="flex items-center gap-2 text-xs text-slate-700">
             <span
-              className="h-3 w-3 shrink-0 rounded-full ring-2 ring-white shadow-sm"
+              className="h-3 w-3 shrink-0 rounded-full shadow-sm"
               style={{ backgroundColor: getMarkerColor(group, "ACTIVE") }}
               aria-hidden
             />

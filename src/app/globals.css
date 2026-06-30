@@ -84,14 +84,14 @@ body {
 .map-legend-anchor {
   position: absolute;
   z-index: 10;
-  top: max(4.25rem, calc(env(safe-area-inset-top, 0px) + 3.25rem));
+  top: max(4.75rem, calc(env(safe-area-inset-top, 0px) + 3.5rem));
   left: max(0.5rem, env(safe-area-inset-left, 0px));
   max-width: min(calc(100% - 1rem), 16rem);
 }
 
 @media (min-width: 640px) {
   .map-legend-anchor {
-    top: 5rem;
+    top: 5.25rem;
     left: 1rem;
     max-width: none;
   }
@@ -298,24 +298,36 @@ body {
   }
 
   .app-logo {
-    @apply inline-flex min-w-0 max-w-full items-center gap-3 rounded-lg transition-opacity hover:opacity-90;
+    @apply inline-flex min-w-0 max-w-full items-center gap-2.5 rounded-lg transition-opacity hover:opacity-90 sm:gap-3;
     color: var(--header-foreground);
   }
 
   .app-logo__icon-wrap {
-    @apply flex h-12 w-12 shrink-0 items-center justify-center;
+    @apply flex h-11 w-11 shrink-0 items-center justify-center sm:h-14 sm:w-14;
   }
 
   .app-logo__icon {
-    @apply h-12 w-12 object-contain;
+    @apply h-full w-full object-contain;
   }
 
   .app-logo__name {
-    @apply truncate text-base font-bold leading-none tracking-tight sm:text-lg;
-    background: linear-gradient(90deg, #2563eb 0%, #7c3aed 45%, #db2777 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    @apply flex min-w-0 items-center gap-x-1.5 truncate sm:gap-x-2;
+  }
+
+  .app-logo__word {
+    @apply text-lg font-bold leading-none tracking-tight sm:text-xl;
+  }
+
+  .app-logo__word--find {
+    color: #2563eb;
+  }
+
+  .app-logo__word--your {
+    color: #7c3aed;
+  }
+
+  .app-logo__word--ride {
+    color: #db2777;
   }
 
   .profile-trigger {
