@@ -17,6 +17,7 @@ import {
 import { DEFAULT_SCHOOL_ID, DEFAULT_SCHOOL_NAME, hasMultipleSchools, type SchoolOption } from "@/lib/schools";
 import type { SessionUser } from "@/lib/types";
 import { PasscodeInput } from "./PasscodeInput";
+import { ProfileModal } from "./ProfileModal";
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -350,7 +351,8 @@ export function AuthModal({
               </span>
               <input
                 name="contactPhone"
-                type="tel"
+                type="text"
+                inputMode="tel"
                 required={signupPhoneRequired}
                 className="input-field"
                 autoComplete="tel"
@@ -476,6 +478,7 @@ export function AuthButtons({
   onUserChange,
 }: AuthButtonsProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [acting, setActing] = useState(false);
 
@@ -544,6 +547,15 @@ export function AuthButtons({
 
   return (
     <div className="relative">
+      {profileOpen && (
+        <ProfileModal
+          onClose={() => setProfileOpen(false)}
+          onSaved={() => {
+            setMessage("Profile updated.");
+            onUserChange();
+          }}
+        />
+      )}
       {message && (
         <div className="fixed inset-x-4 top-20 z-30 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-64">
           {message}
@@ -607,6 +619,20 @@ export function AuthButtons({
             </div>
 
             <div className="p-1.5">
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setProfileOpen(true);
+                }}
+                className="profile-menu__item"
+              >
+                <svg className="profile-menu__icon h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Edit profile
+              </button>
               {!inactive && (
                 <>
                   <button

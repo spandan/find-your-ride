@@ -1,4 +1,5 @@
 import type { PreferredContactMethod } from "@/generated/prisma/client";
+import { isValidUsPhone } from "@/lib/phone";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,16 +13,8 @@ export function isValidEmail(value: string): boolean {
   return EMAIL_PATTERN.test(trimmed);
 }
 
-export function normalizePhoneDigits(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length === 11 && digits.startsWith("1")) {
-    return digits.slice(1);
-  }
-  return digits;
-}
-
 export function isValidPhone(phone: string): boolean {
-  return normalizePhoneDigits(phone).length === 10;
+  return isValidUsPhone(phone);
 }
 
 export function preferredMethodNeedsPhone(

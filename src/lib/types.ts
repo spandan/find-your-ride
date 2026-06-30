@@ -75,6 +75,27 @@ export type ResetPasscodeInput = {
   newPasscode: string;
 };
 
+export type UserProfile = {
+  firstName: string;
+  lastName: string;
+  username: string;
+  contactEmail: string;
+  contactPhone: string | null;
+  preferredContactMethod: PreferredContactMethod;
+  showPersonalInfo: boolean;
+  showContactInfo: boolean;
+};
+
+export type UpdateProfileInput = {
+  firstName: string;
+  lastName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  preferredContactMethod: PreferredContactMethod;
+  showPersonalInfo: boolean;
+  showContactInfo: boolean;
+};
+
 export type GeocodeResult = {
   latitude: number;
   longitude: number;

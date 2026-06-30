@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "School Pickup Share Map",
   description:
     "Find nearby school pickup and drop-off partners by location, timing, and school group.",
+  other: {
+    "format-detection": "telephone=no",
+  },
 };
 
 export const viewport = {

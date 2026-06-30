@@ -2,6 +2,7 @@
 
 import type { PreferredContactMethod } from "@/generated/prisma/client";
 import type { MapListing } from "@/lib/types";
+import { displayPhoneNumber, phoneTelHref } from "@/lib/phone";
 import {
   canShowContactInfo,
   getMarkerColor,
@@ -53,10 +54,10 @@ export function ListingPopup({ listing, isLoggedIn, onLogin }: ListingPopupProps
               </a>
               {listing.contactPhone && (
                 <a
-                  href={`tel:${listing.contactPhone.replace(/\D/g, "")}`}
-                  className="block text-sm font-medium text-blue-800 hover:underline"
+                  href={phoneTelHref(listing.contactPhone)}
+                  className="block text-sm font-medium text-blue-800 hover:underline [x-apple-data-detectors:none]"
                 >
-                  {listing.contactPhone}
+                  {displayPhoneNumber(listing.contactPhone)}
                 </a>
               )}
             </div>

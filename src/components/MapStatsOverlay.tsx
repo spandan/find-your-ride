@@ -9,6 +9,9 @@ type MapStatsOverlayProps = {
 export function MapStatsOverlay({ stats }: MapStatsOverlayProps) {
   if (!stats) return null;
 
+  const hasActivity = stats.activeFamilies > 0 || stats.foundRideFamilies > 0;
+  if (!hasActivity) return null;
+
   return (
     <>
       <div className="map-stat-card bottom-3 left-3 sm:bottom-4 sm:left-4">

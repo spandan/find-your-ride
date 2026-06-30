@@ -230,6 +230,8 @@ export function Dashboard() {
           {showEmptyOverlay && (
             <MapEmptyOverlay
               distanceMiles={appliedFilters.distanceMiles}
+              totalListings={listings.length}
+              isLoggedIn={!!user}
               onExpandRadius={handleExpandRadius}
               onAddFamily={() => setAuthMode("signup")}
             />

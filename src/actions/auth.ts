@@ -7,7 +7,7 @@ import { geocodeStreetAddress } from "@/lib/geocode";
 import { blurCoordinates } from "@/lib/location";
 import { hashPasscode, validatePasscode, verifyPasscode, assertStoredPasscodeIsHashed } from "@/lib/passcode";
 import { prisma } from "@/lib/prisma";
-import { RESET_IDENTITY_MISMATCH_MESSAGE } from "@/lib/constants";
+import { RESET_IDENTITY_MISMATCH_MESSAGE, SIGNUP_DUPLICATE_NAME_MESSAGE } from "@/lib/constants";
 import { getSchoolById } from "@/actions/schools";
 import {
   resolveContactEmail,
@@ -24,6 +24,8 @@ import type {
   ResetPasscodeInput,
   SessionUser,
   SignupInput,
+  UpdateProfileInput,
+  UserProfile,
 } from "@/lib/types";
 
 function normalizeLoginId(loginId: string): string {
@@ -39,6 +41,22 @@ async function findByLoginId(loginId: string) {
         { username: normalized },
         { contactEmail: { equals: normalized, mode: "insensitive" } },
       ],
+    },
+  });
+}
+
+async function findByName(firstName: string, lastName: string) {
+  const trimmedFirst = firstName.trim();
+  const trimmedLast = lastName.trim();
+  if (!trimmedFirst || !trimmedLast) {
+    return null;
+  }
+
+  return prisma.familyListing.findFirst({
+    where: {
+      status: { not: "DELETED" },
+      firstName: { equals: trimmedFirst, mode: "insensitive" },
+      lastName: { equals: trimmedLast, mode: "insensitive" },
     },
   });
 }
@@ -168,6 +186,13 @@ export async function signup(
     };
   }
 
+  const firstName = input.firstName.trim();
+  const lastName = input.lastName.trim();
+  const existingName = await findByName(firstName, lastName);
+  if (existingName) {
+    return { success: false, error: SIGNUP_DUPLICATE_NAME_MESSAGE };
+  }
+
   const state = input.state.trim().toUpperCase();
   const locationQuery = `${input.streetName.trim()}, ${input.city.trim()}, ${state}`;
   const geocoded = await geocodeStreetAddress(
@@ -186,13 +211,12 @@ export async function signup(
   const schoolGroup = deriveSchoolGroup(input.grades);
   const passcodeHash = await hashPasscode(input.passcode);
   assertStoredPasscodeIsHashed(passcodeHash, input.passcode);
-  const firstName = input.firstName.trim();
-  const lastInitial = input.lastName.trim().charAt(0).toUpperCase();
+  const lastInitial = lastName.charAt(0).toUpperCase();
 
   const listing = await prisma.familyListing.create({
     data: {
       firstName,
-      lastName: input.lastName.trim(),
+      lastName,
       username: loginId,
       parentDisplayName: `${firstName} ${lastInitial}.`,
       contactEmail,
@@ -369,6 +393,104 @@ export async function deactivateMyListing(): Promise<
   await prisma.familyListing.update({
     where: { id: listing.id },
     data: { status: "DEACTIVATED", deactivatedAt: new Date() },
+  });
+
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function getMyProfile(): Promise<UserProfile | null> {
+  const session = await getSession();
+  if (!session) return null;
+
+  const listing = await prisma.familyListing.findUnique({
+    where: { id: session.listingId },
+    select: {
+      firstName: true,
+      lastName: true,
+      username: true,
+      contactEmail: true,
+      contactPhone: true,
+      preferredContactMethod: true,
+      showPersonalInfo: true,
+      showContactInfo: true,
+      status: true,
+    },
+  });
+
+  if (!listing || listing.status === "DELETED") {
+    await clearSession();
+    return null;
+  }
+
+  return listing;
+}
+
+export async function updateMyProfile(
+  input: UpdateProfileInput
+): Promise<{ success: true } | { success: false; error: string }> {
+  const session = await getSession();
+  if (!session) return { success: false, error: "Please log in first." };
+
+  const listing = await prisma.familyListing.findUnique({
+    where: { id: session.listingId },
+    select: { id: true, username: true, status: true },
+  });
+
+  if (!listing || listing.status === "DELETED") {
+    return { success: false, error: "Listing not found." };
+  }
+
+  const firstName = input.firstName.trim();
+  const lastName = input.lastName.trim();
+  if (!firstName || !lastName) {
+    return { success: false, error: "First and last name are required." };
+  }
+
+  const contactError = validateSignupContact(
+    input.preferredContactMethod,
+    input.contactEmail,
+    input.contactPhone,
+    listing.username
+  );
+  if (contactError) {
+    return { success: false, error: contactError };
+  }
+
+  const contactEmail = resolveContactEmail(input.contactEmail, listing.username);
+  if (!contactEmail) {
+    return {
+      success: false,
+      error:
+        "Contact email is required. Use your login email or enter a contact email.",
+    };
+  }
+
+  const nameConflict = await prisma.familyListing.findFirst({
+    where: {
+      status: { not: "DELETED" },
+      firstName: { equals: firstName, mode: "insensitive" },
+      lastName: { equals: lastName, mode: "insensitive" },
+      NOT: { id: listing.id },
+    },
+  });
+  if (nameConflict) {
+    return { success: false, error: SIGNUP_DUPLICATE_NAME_MESSAGE };
+  }
+
+  const lastInitial = lastName.charAt(0).toUpperCase();
+  await prisma.familyListing.update({
+    where: { id: listing.id },
+    data: {
+      firstName,
+      lastName,
+      parentDisplayName: `${firstName} ${lastInitial}.`,
+      contactEmail,
+      contactPhone: input.contactPhone?.trim() || null,
+      preferredContactMethod: input.preferredContactMethod,
+      showPersonalInfo: input.showPersonalInfo,
+      showContactInfo: input.showContactInfo,
+    },
   });
 
   revalidatePath("/");

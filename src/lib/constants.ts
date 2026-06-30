@@ -19,6 +19,9 @@ export const CONTACT_EMAIL = "info@asterteksolutions.com";
 
 export const RESET_IDENTITY_MISMATCH_MESSAGE = `We couldn't verify your first name, last name, and username or email. Please contact us at ${CONTACT_EMAIL} for help resetting your passcode.`;
 
+export const SIGNUP_DUPLICATE_NAME_MESSAGE =
+  "A user with this first and last name already exists. Please log in to edit your profile.";
+
 export type MapCenter = {
   lat: number;
   lng: number;
