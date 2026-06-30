@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SchoolGroup {
+  LOWER
+  UPPER
+  MIXED
+}
+
+enum LocationPrecision {
+  EXACT
+  APPROXIMATE
+  INTERSECTION
+}
+
+enum PreferredContactMethod {
+  EMAIL
+  PHONE
+  TEXT
+  WHATSAPP
+}
+
+enum ListingStatus {
+  ACTIVE
+  FOUND_RIDE
+  DEACTIVATED
+  DELETED
+}
+
+enum SharingIntent {
+  PICKUP
+  DROPOFF
+  BOTH
+}
+
+model School {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  slug      String          @unique
+  city      String          @default("Frisco")
+  state     String          @default("TX")
+  active    Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  listings  FamilyListing[]
+
+  @@index([active])
+}
+
+model FamilyListing {
+  id                       String                 @id @default(cuid())
+  firstName                String                 @default("")
+  lastName                 String                 @default("")
+  username                 String                 @default("")
+  parentDisplayName        String
+  contactEmail             String
+  contactPhone             String?
+  preferredContactMethod   PreferredContactMethod
+  streetName               String                 @default("")
+  city                     String                 @default("")
+  state                    String                 @default("TX")
+  locationText             String
+  latitude                 Float
+  longitude                Float
+  displayLatitude          Float
+  displayLongitude         Float
+  locationPrecision        LocationPrecision      @default(APPROXIMATE)
+  showExactLocation        Boolean                @default(false)
+  showPersonalInfo         Boolean                @default(true)
+  showContactInfo          Boolean                @default(true)
+  showContactWhenFoundRide Boolean                @default(false)
+  numberOfKids             Int
+  grades                   String[]
+  schoolId                 String
+  school                   School                 @relation(fields: [schoolId], references: [id])
+  schoolName               String                 @default("Imagine International Academy of North Texas")
+  schoolGroup              SchoolGroup
+  dropoffTimePreference    String                 @default("Flexible")
+  pickupTimePreference     String                 @default("Flexible")
+  sharingIntent            SharingIntent          @default(BOTH)
+  notes                    String?
+  consentGiven             Boolean                @default(false)
+  status                   ListingStatus          @default(ACTIVE)
+  passcodeHash             String                 @default("") // scrypt salted hash only — never plaintext
+  foundRideAt              DateTime?
+  deactivatedAt            DateTime?
+  deletedAt                DateTime?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+
+  @@unique([username])
+  @@index([schoolId])
+  @@index([schoolGroup])
+  @@index([status])
+  @@index([latitude, longitude])
+  @@index([contactEmail])
+  @@index([status, username])
+  @@index([displayLatitude, displayLongitude])
+  @@index([sharingIntent])
+  @@index([preferredContactMethod])
+  @@index([createdAt(sort: Desc)])
+}
+
+model AppAnalytics {
+  id                   String   @id @default("singleton")
+  totalListingsCreated Int      @default(0)
+  activeListings       Int      @default(0)
+  foundRideListings    Int      @default(0)
+  deletedListings      Int      @default(0)
+  updatedAt            DateTime @updatedAt
+}

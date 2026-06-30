@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# School Pickup Share Map
 
-## Getting Started
+A privacy-conscious dashboard where parents can add themselves to a shared map and find nearby pickup/drop-off partners based on school group, timing, and location.
 
-First, run the development server:
+## Tech Stack
+
+- **Next.js** (App Router) + React + TypeScript
+- **Tailwind CSS**
+- **OpenStreetMap** via Leaflet / React-Leaflet
+- **PostgreSQL** + **Prisma**
+
+## Features
+
+- Interactive map with color-coded family markers (green = Lower School, red = Upper School, orange = Mixed)
+- Address/intersection search with geocoding (OpenStreetMap Nominatim)
+- Filters by school group, pickup/drop-off time compatibility, distance, and contact method
+- Add-family form with automatic school group derivation from grades
+- Privacy-conscious location display (intersection/neighborhood preferred, coordinate blurring)
+- Contact info shown only when opted in
+- **Found My Ride** status — mark listings inactive without deleting
+- Passcode-based listing management (edit, found ride, reactivate, delete)
+- Seed data for demo/testing
+
+## Listing Status
+
+| Status | Map | Search results | Contact |
+|--------|-----|----------------|---------|
+| **ACTIVE** | Normal marker | Included by default | Shown if opted in |
+| **FOUND_RIDE** | Muted marker (~45% opacity) + "✓ Found Ride" badge | Excluded unless filter enabled | Hidden unless owner opts in |
+| **DELETED** | Hidden | Hidden | Hidden (soft-deleted for audit) |
+
+Parents manage listings with a **listing ID + passcode** set at creation time. Actions: edit, mark as Found My Ride, reactivate, or delete.
+
+## School Groups & Hours
+
+| Group | Grades | Schedule |
+|-------|--------|----------|
+| **Lower School** | K–5 | M/T/Th/F 7:30 AM – 3:15 PM · Wed 7:30 AM – 11:45 AM |
+| **Upper School** | 6–12 | M/T/Th/F 8:00 AM – 3:45 PM · Wed 8:00 AM – 12:15 PM |
+| **Mixed** | Both | Lower students with Upper siblings follow Upper School pickup schedule |
+
+## Setup
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment
+
+Copy the example env file and set your database URL:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set `DATABASE_URL` to your PostgreSQL connection string.
+
+**Option A — Local PostgreSQL**
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/school_pickup_map"
+```
+
+**Option B — Prisma Postgres dev server**
+
+```bash
+npx prisma dev
+```
+
+This starts a local Postgres instance and writes a `prisma+postgres://` URL to `.env`. The app automatically resolves this to the underlying Postgres connection for the Prisma 7 driver adapter.
+
+### 3. Run Prisma migrations
+
+```bash
+npm run db:migrate
+```
+
+Or push schema without migration history:
+
+```bash
+npm run db:push
+```
+
+### 4. Seed demo data
+
+```bash
+npm run db:seed
+```
+
+### 5. Start the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (required) |
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:migrate` | Run database migrations |
+| `npm run db:push` | Push schema to database |
+| `npm run db:seed` | Seed demo family listings |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Privacy & Safety
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This tool involves children and families. The MVP includes:
 
-## Deploy on Vercel
+- **No child names** collected or displayed
+- **Intersection/neighborhood** locations preferred over exact home addresses
+- **Coordinate blurring** when approximate or intersection mode is selected
+- **Opt-in contact sharing** — email/phone hidden unless the parent enables it
+- **Safety disclaimer** on the add-family form
+- **Soft delete** — deleted listings preserved for audit, never shown publicly
+- **Passcode protection** for listing management (TODO: replace with full auth)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Parents must verify identity independently and coordinate safely.** This is a community coordination tool, not a vetted carpool matching service.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Demo seed credentials
+
+After running `npm run db:seed`, all demo listings use passcode: `demo1234`. Two listings are pre-marked as Found My Ride (Sarah M., Lisa W.).
+
+## Project Structure
+
+```
+src/
+  actions/listings.ts    # Server actions (create, search, manage, geocode)
+  lib/analytics.ts       # Stored match metrics (not displayed in MVP)
+  lib/passcode.ts        # Passcode hashing and verification
+  components/            # Dashboard, map, form, filters
+  lib/                   # Helpers (geocode, school group, distance, blur)
+  generated/prisma/      # Prisma client (generated)
+prisma/
+  schema.prisma          # FamilyListing model
+  seed.ts                # Demo data
+```
+
+## TODO (Future Work)
+
+- [ ] **Authentication** — replace passcode with school email or OAuth
+- [ ] **Parent verification** — verify identity before listing goes live
+- [ ] **School-specific access** — restrict map to verified school community
+- [ ] **Moderation** — review queue for new listings and reporting
+- [ ] **Admin dashboard** — display stored analytics (match rate, active vs found ride)
+- [ ] **Rate limiting** on geocoding and listing creation
+
+## License
+
+Private / community use.
