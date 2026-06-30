@@ -19,6 +19,7 @@ import { AddressSearchBar } from "./AddressSearchBar";
 import { AuthModal } from "./AuthModal";
 import { HowItWorksModal } from "./HowItWorksModal";
 import { MapEmptyOverlay } from "./MapEmptyOverlay";
+import { MapLeftOverlay } from "./MapLeftOverlay";
 import { MapStatsOverlay } from "./MapStatsOverlay";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
@@ -225,6 +226,7 @@ export function Dashboard() {
             onLogin={() => setAuthMode("login")}
           />
 
+          <MapLeftOverlay stats={stats} />
           <MapStatsOverlay stats={stats} />
 
           {showEmptyOverlay && (
