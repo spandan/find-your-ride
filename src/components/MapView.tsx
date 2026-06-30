@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Map, { Marker, NavigationControl, Popup, type MapRef } from "react-map-gl/maplibre";
+import Map, {
+  AttributionControl,
+  Marker,
+  NavigationControl,
+  Popup,
+  type MapRef,
+} from "react-map-gl/maplibre";
 import type { MapListing } from "@/lib/types";
 import { MAP_STYLE_URL } from "@/lib/constants";
 import { ListingHoverCard } from "./ListingHoverCard";
@@ -66,8 +72,10 @@ export function MapView({
       mapStyle={MAP_STYLE_URL}
       style={{ width: "100%", height: "100%" }}
       scrollZoom
+      attributionControl={false}
       onClick={() => onSelectListing(null)}
     >
+      <AttributionControl position="bottom-right" compact />
       <NavigationControl position="bottom-right" showCompass={false} />
 
       {listings.map((listing) => {

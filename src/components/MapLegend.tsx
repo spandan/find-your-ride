@@ -11,8 +11,8 @@ const LEGEND_ITEMS: { group: SchoolGroup; label: string }[] = [
 
 export function MapLegend() {
   return (
-    <div className="map-overlay-card flex-col items-stretch gap-0 py-2.5" aria-label="Map legend">
-      <ul className="flex flex-col gap-1.5">
+    <div className="map-overlay-card map-legend-card" aria-label="Map legend">
+      <ul className="flex flex-row flex-wrap gap-x-3 gap-y-1 sm:flex-col sm:gap-1.5">
         {LEGEND_ITEMS.map(({ group, label }) => (
           <li key={group} className="flex items-center gap-2 text-xs text-slate-700">
             <span

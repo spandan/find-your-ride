@@ -20,7 +20,6 @@ import { AddressSearchBar } from "./AddressSearchBar";
 import { AuthModal } from "./AuthModal";
 import { AgreementModal } from "./AgreementModal";
 import { HowItWorksModal } from "./HowItWorksModal";
-import { MapCredits } from "./MapCredits";
 import { MapLeftOverlay } from "./MapLeftOverlay";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
@@ -254,7 +253,6 @@ export function Dashboard() {
           />
 
           <MapLeftOverlay stats={stats} />
-          <MapCredits />
         </main>
       </div>
 
