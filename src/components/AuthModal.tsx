@@ -17,6 +17,7 @@ import {
 import { DEFAULT_SCHOOL_ID, DEFAULT_SCHOOL_NAME, hasMultipleSchools, type SchoolOption } from "@/lib/schools";
 import type { SessionUser } from "@/lib/types";
 import { PasscodeInput } from "./PasscodeInput";
+import { AppModal } from "./AppModal";
 import { ProfileModal } from "./ProfileModal";
 
 type AuthMode = "login" | "signup" | "reset";
@@ -179,17 +180,7 @@ export function AuthModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[2000] flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-      onClick={onClose}
-    >
-      <div
-        className="panel max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:max-h-[90vh] sm:rounded-xl sm:p-6 sm:pb-6"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="auth-title"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AppModal onClose={onClose} labelledBy="auth-title">
         <div className="mb-5 flex items-start justify-between">
           <div>
             <h2 id="auth-title" className="text-lg font-bold text-slate-900">
@@ -459,8 +450,7 @@ export function AuthModal({
             </button>
           </form>
         )}
-      </div>
-    </div>
+    </AppModal>
   );
 }
 

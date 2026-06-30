@@ -18,12 +18,9 @@ const CONTACT_OPTIONS: { value: PreferredContactMethod; label: string }[] = [
 ];
 
 const SCHOOL_OPTIONS = [
-  { key: "LOWER" as const, label: "Lower School (K–5)" },
-  { key: "UPPER" as const, label: "Upper School (6–12)" },
-  {
-    key: "MIXED" as const,
-    label: "Mixed siblings (drop-off Lower · pickup Upper)",
-  },
+  { key: "LOWER" as const, label: "K-5" },
+  { key: "UPPER" as const, label: "6-12" },
+  { key: "MIXED" as const, label: "K-12" },
 ];
 
 type SidebarProps = {

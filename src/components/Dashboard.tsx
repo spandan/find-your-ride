@@ -19,7 +19,6 @@ import { AddressSearchBar } from "./AddressSearchBar";
 import { AuthModal } from "./AuthModal";
 import { HowItWorksModal } from "./HowItWorksModal";
 import { MapEmptyOverlay } from "./MapEmptyOverlay";
-import { MapLegend } from "./MapLegend";
 import { MapStatsOverlay } from "./MapStatsOverlay";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
@@ -225,8 +224,6 @@ export function Dashboard() {
             onSelectListing={setSelectedId}
             onLogin={() => setAuthMode("login")}
           />
-
-          <MapLegend />
 
           <MapStatsOverlay stats={stats} />
 

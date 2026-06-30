@@ -1,6 +1,7 @@
 "use client";
 
 import { SAMPLE_SEARCH_ADDRESS } from "@/lib/constants";
+import { MapLegend } from "./MapLegend";
 
 type AddressSearchBarProps = {
   searchQuery: string;
@@ -20,11 +21,12 @@ export function AddressSearchBar({
   filtersOpen,
 }: AddressSearchBarProps) {
   return (
-    <div className="pointer-events-none absolute left-1/2 top-3 z-20 w-full max-w-xl -translate-x-1/2 px-3 sm:top-4 sm:px-4">
-      <form
-        onSubmit={onSearch}
-        className="pointer-events-auto flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-md sm:gap-2 sm:rounded-3xl sm:p-2"
-      >
+    <div className="pointer-events-none absolute inset-x-0 top-3 z-20 px-3 sm:top-4 sm:px-4">
+      <div className="pointer-events-auto mx-auto w-full max-w-xl space-y-2">
+        <form
+          onSubmit={onSearch}
+          className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-md sm:gap-2 sm:rounded-3xl sm:p-2"
+        >
         <input
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
@@ -61,12 +63,14 @@ export function AddressSearchBar({
             />
           </svg>
         </button>
-      </form>
-      {searchError && (
-        <p className="pointer-events-auto mt-2 rounded-2xl border border-red-200 bg-white px-3 py-2 text-xs text-red-600 shadow-sm">
-          {searchError}
-        </p>
-      )}
+        </form>
+        {searchError && (
+          <p className="rounded-2xl border border-red-200 bg-white px-3 py-2 text-xs text-red-600 shadow-sm">
+            {searchError}
+          </p>
+        )}
+        <MapLegend />
+      </div>
     </div>
   );
 }

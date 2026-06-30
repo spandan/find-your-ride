@@ -78,11 +78,11 @@ export function canShowContactInfo(
 export function getSchoolGroupLabel(schoolGroup: SchoolGroup): string {
   switch (schoolGroup) {
     case "LOWER":
-      return "Lower School";
+      return "K-5";
     case "UPPER":
-      return "Upper School";
+      return "6-12";
     case "MIXED":
-      return "Mixed siblings";
+      return "K-12";
   }
 }
 
