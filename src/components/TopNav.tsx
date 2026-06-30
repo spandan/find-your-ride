@@ -1,6 +1,7 @@
 "use client";
 
 import type { SessionUser } from "@/lib/types";
+import { AppLogo } from "./AppLogo";
 import { AuthButtons } from "./AuthModal";
 
 type TopNavProps = {
@@ -20,10 +21,8 @@ export function TopNav({
 }: TopNavProps) {
   return (
     <header className="app-header z-30 flex h-14 shrink-0 items-center justify-between gap-3 px-4 lg:px-5">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="truncate text-sm font-bold sm:text-base">
-          School Pickup Share
-        </span>
+      <div className="flex min-w-0 items-center">
+        <AppLogo />
       </div>
 
       <nav className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2 md:gap-3">

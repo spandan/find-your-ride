@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { APP_NAME, APP_TAGLINE, APP_LOGO_PATH } from "@/lib/branding";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,9 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "School Pickup Share Map",
-  description:
-    "Find nearby school pickup and drop-off partners by location, timing, and school group.",
+  title: APP_NAME,
+  description: APP_TAGLINE,
+  icons: {
+    icon: APP_LOGO_PATH,
+    shortcut: APP_LOGO_PATH,
+    apple: APP_LOGO_PATH,
+  },
   other: {
     "format-detection": "telephone=no",
   },

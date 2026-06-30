@@ -297,6 +297,31 @@ body {
     color: var(--header-foreground);
   }
 
+  .app-logo {
+    @apply inline-flex min-w-0 max-w-full items-center gap-2.5 rounded-lg transition-opacity hover:opacity-90;
+    color: var(--header-foreground);
+  }
+
+  .app-logo__lockup {
+    @apply block max-w-[8.5rem] sm:max-w-[9.5rem];
+  }
+
+  .app-logo__mark {
+    @apply relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50;
+  }
+
+  .app-logo__img {
+    @apply h-full w-full object-contain;
+  }
+
+  .app-logo__placeholder {
+    @apply absolute inset-0 flex items-center justify-center bg-slate-50;
+  }
+
+  .app-logo__name {
+    @apply truncate text-sm font-bold tracking-tight sm:text-base;
+  }
+
   .profile-trigger {
     @apply inline-flex h-10 min-w-0 items-center gap-2 rounded-lg border px-2.5 text-sm font-medium transition-[border-color,box-shadow,background-color] sm:px-3;
     max-width: 9.5rem;

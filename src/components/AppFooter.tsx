@@ -1,15 +1,16 @@
 "use client";
 
 import { CONTACT_EMAIL } from "@/lib/constants";
+import { AppLogo } from "./AppLogo";
 
 export function AppFooter() {
   return (
     <footer className="border-t border-slate-200 bg-white px-4 py-6">
-      <div className="mx-auto max-w-3xl text-center">
-        <p className="text-sm font-semibold text-slate-900">School Pickup Share</p>
-        <p className="mt-1 text-xs text-slate-500">Helping parents connect safely.</p>
+      <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+        <AppLogo />
+        <p className="mt-2 text-xs text-slate-500">Helping parents connect safely.</p>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
-          <a href="#" className="text-slate-600 hover:text-blue-700">
+          <a href="/privacy" className="text-slate-600 hover:text-blue-700">
             Privacy Policy
           </a>
           <a
