@@ -2,10 +2,10 @@
 export const DEFAULT_SCHOOL_MAP = {
   lat: 33.1975,
   lng: -96.698,
-} as const;
+};
 
 /** Default view: school centered, zoom fits Frisco, McKinney & Allen */
-export const DEFAULT_MAP_CENTER = {
+export const DEFAULT_MAP_CENTER: MapCenter = {
   lat: DEFAULT_SCHOOL_MAP.lat,
   lng: DEFAULT_SCHOOL_MAP.lng,
   zoom: 10,
