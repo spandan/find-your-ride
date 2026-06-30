@@ -36,13 +36,19 @@ export function isRailwayEnvironment(): boolean {
   return Boolean(process.env.RAILWAY_ENVIRONMENT);
 }
 
+/** Node `pg` rejects Railway's self-signed cert unless sslmode=no-verify. */
+const RAILWAY_SSL_MODE = "no-verify";
+
 export function withDatabaseSsl(connectionString: string): string {
   if (!isRailwayEnvironment() && process.env.DATABASE_SSL !== "true") {
     return connectionString;
   }
   if (connectionString.includes("sslmode=")) {
-    return connectionString;
+    return connectionString.replace(
+      /sslmode=[^&]*/i,
+      `sslmode=${RAILWAY_SSL_MODE}`
+    );
   }
   const separator = connectionString.includes("?") ? "&" : "?";
-  return `${connectionString}${separator}sslmode=require`;
+  return `${connectionString}${separator}sslmode=${RAILWAY_SSL_MODE}`;
 }

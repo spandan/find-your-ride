@@ -1,13 +1,15 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { resolveDatabaseUrl } from "../src/lib/database-url";
+import { resolveDatabaseUrl, withDatabaseSsl } from "../src/lib/database-url";
 import { blurCoordinates } from "../src/lib/location";
 import { SEED_SCHOOLS } from "../src/lib/schools";
 import { hashPasscode } from "../src/lib/passcode";
 import { deriveSchoolGroup } from "../src/lib/school";
 
-const adapter = new PrismaPg({ connectionString: resolveDatabaseUrl() });
+const adapter = new PrismaPg({
+  connectionString: withDatabaseSsl(resolveDatabaseUrl()),
+});
 const prisma = new PrismaClient({ adapter });
 
 type SeedFamily = {
