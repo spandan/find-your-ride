@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Map, { Marker, NavigationControl, Popup, type MapRef } from "react-map-gl/maplibre";
 import type { MapListing } from "@/lib/types";
 import { MAP_STYLE_URL } from "@/lib/constants";
+import { ListingHoverCard } from "./ListingHoverCard";
 import { ListingPopup } from "./ListingPopup";
 import { MapMarker } from "./MapMarker";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -48,6 +49,11 @@ export function MapView({
   const selectedListing = selectedId
     ? listings.find((listing) => listing.id === selectedId)
     : null;
+
+  const hoveredListing =
+    isLoggedIn && hoveredId && hoveredId !== selectedId
+      ? listings.find((listing) => listing.id === hoveredId)
+      : null;
 
   return (
     <Map
@@ -96,6 +102,21 @@ export function MapView({
           </Marker>
         );
       })}
+
+      {hoveredListing && (
+        <Popup
+          longitude={hoveredListing.displayLongitude}
+          latitude={hoveredListing.displayLatitude}
+          anchor="bottom"
+          offset={16}
+          closeButton={false}
+          closeOnClick={false}
+          className="family-hover-popup"
+          maxWidth="none"
+        >
+          <ListingHoverCard listing={hoveredListing} />
+        </Popup>
+      )}
 
       {selectedListing && (
         <Popup

@@ -99,6 +99,28 @@ body {
   padding: 1.125rem 1.125rem 1.25rem;
 }
 
+.family-hover-popup .maplibregl-popup-content {
+  padding: 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.14);
+}
+
+.family-hover-popup .maplibregl-popup-tip {
+  border-top-color: white !important;
+}
+
+.listing-hover-card {
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+.listing-hover-card__accent {
+  height: 3px;
+  width: 100%;
+}
+
 @layer components {
   .page-title {
     @apply text-2xl font-bold tracking-tight text-slate-900;

@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/actions/auth";
 import { geocodeLocation } from "@/lib/geocode";
+import { deriveSchoolGroup } from "@/lib/school";
 import { prisma } from "@/lib/prisma";
 import type { CommunityStats, MapListing } from "@/lib/types";
 
@@ -28,7 +29,22 @@ const listingSelect = {
   notes: true,
   displayLatitude: true,
   displayLongitude: true,
+  grades: true,
 } as const;
+
+function toMapListing(
+  row: Awaited<
+    ReturnType<
+      typeof prisma.familyListing.findMany<{ select: typeof listingSelect }>
+    >
+  >[number]
+): MapListing {
+  const { grades, ...listing } = row;
+  return {
+    ...listing,
+    schoolGroup: deriveSchoolGroup(grades),
+  };
+}
 
 async function resolveSchoolScope(requestedSchoolId?: string): Promise<string | null> {
   const user = await getCurrentUser();
@@ -42,13 +58,15 @@ export async function getMapListings(
   const schoolId = await resolveSchoolScope(requestedSchoolId);
   if (!schoolId) return [];
 
-  return prisma.familyListing.findMany({
-    where: {
-      status: { in: [...VISIBLE_STATUSES] },
-      schoolId,
-    },
-    select: listingSelect,
-  });
+  return prisma.familyListing
+    .findMany({
+      where: {
+        status: { in: [...VISIBLE_STATUSES] },
+        schoolId,
+      },
+      select: listingSelect,
+    })
+    .then((rows) => rows.map(toMapListing));
 }
 
 export async function getCommunityStats(

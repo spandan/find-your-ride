@@ -11,13 +11,14 @@ function normalizeGrade(grade: string): string {
 
 /**
  * Derive school group from children's grades.
- * K–5 = Lower, 6–12 = Upper. Families with both follow Upper School pickup.
+ * K–5 = Lower, 6–12 = Upper, both = Mixed (drop-off: Lower · pickup: Upper).
  */
 export function deriveSchoolGroup(grades: string[]): SchoolGroup {
   const normalized = grades.map(normalizeGrade);
   const hasLower = normalized.some((g) => LOWER_GRADES.has(g));
   const hasUpper = normalized.some((g) => UPPER_GRADES.has(g));
 
+  if (hasLower && hasUpper) return "MIXED";
   if (hasUpper) return "UPPER";
   if (hasLower) return "LOWER";
 
@@ -46,7 +47,7 @@ export function getMarkerColor(
     case "UPPER":
       return "#dc2626";
     case "MIXED":
-      return "#ea580c";
+      return "#2563eb";
   }
 }
 
@@ -81,7 +82,7 @@ export function getSchoolGroupLabel(schoolGroup: SchoolGroup): string {
     case "UPPER":
       return "Upper School";
     case "MIXED":
-      return "Mixed";
+      return "Mixed siblings";
   }
 }
 
@@ -92,7 +93,7 @@ export function getSchoolGroupBadgeClass(schoolGroup: SchoolGroup): string {
     case "UPPER":
       return "bg-red-50 text-red-800 border-red-200";
     case "MIXED":
-      return "bg-orange-50 text-orange-800 border-orange-200";
+      return "bg-blue-50 text-blue-800 border-blue-200";
   }
 }
 
@@ -103,6 +104,6 @@ export function getSchoolGroupDotClass(schoolGroup: SchoolGroup): string {
     case "UPPER":
       return "bg-red-500";
     case "MIXED":
-      return "bg-orange-500";
+      return "bg-blue-600";
   }
 }

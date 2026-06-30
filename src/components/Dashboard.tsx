@@ -19,6 +19,7 @@ import { AddressSearchBar } from "./AddressSearchBar";
 import { AuthModal } from "./AuthModal";
 import { HowItWorksModal } from "./HowItWorksModal";
 import { MapEmptyOverlay } from "./MapEmptyOverlay";
+import { MapLegend } from "./MapLegend";
 import { MapStatsOverlay } from "./MapStatsOverlay";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
@@ -225,15 +226,14 @@ export function Dashboard() {
             onLogin={() => setAuthMode("login")}
           />
 
+          <MapLegend />
+
           <MapStatsOverlay stats={stats} />
 
           {showEmptyOverlay && (
             <MapEmptyOverlay
               distanceMiles={appliedFilters.distanceMiles}
-              totalListings={listings.length}
-              isLoggedIn={!!user}
               onExpandRadius={handleExpandRadius}
-              onAddFamily={() => setAuthMode("signup")}
             />
           )}
         </main>

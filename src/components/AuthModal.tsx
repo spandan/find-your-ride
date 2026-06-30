@@ -425,9 +425,9 @@ export function AuthModal({
             <label className="block">
               <span className="field-label">Looking for *</span>
               <select name="sharingIntent" required defaultValue="BOTH" className="select-field">
-                <option value="PICKUP">Pickup sharing</option>
-                <option value="DROPOFF">Drop-off sharing</option>
-                <option value="BOTH">Both pickup and drop-off</option>
+                <option value="PICKUP">Pickup</option>
+                <option value="DROPOFF">Drop-off</option>
+                <option value="BOTH">Pickup & drop-off</option>
               </select>
             </label>
             <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">

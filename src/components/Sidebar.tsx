@@ -18,9 +18,12 @@ const CONTACT_OPTIONS: { value: PreferredContactMethod; label: string }[] = [
 ];
 
 const SCHOOL_OPTIONS = [
-  { key: "LOWER" as const, label: "Lower School" },
-  { key: "UPPER" as const, label: "Upper School" },
-  { key: "MIXED" as const, label: "Mixed" },
+  { key: "LOWER" as const, label: "Lower School (K–5)" },
+  { key: "UPPER" as const, label: "Upper School (6–12)" },
+  {
+    key: "MIXED" as const,
+    label: "Mixed siblings (drop-off Lower · pickup Upper)",
+  },
 ];
 
 type SidebarProps = {
@@ -228,13 +231,13 @@ export function Sidebar({
             />
           </FilterSection>
 
-          <FilterSection title="Availability">
+          <FilterSection title="Looking for">
             <div className="space-y-2">
               {(
                 [
-                  { key: "pickup" as const, label: "Looking for Pickup" },
-                  { key: "dropoff" as const, label: "Looking for Drop-off" },
-                  { key: "both" as const, label: "Both" },
+                  { key: "pickup" as const, label: "Pickup" },
+                  { key: "dropoff" as const, label: "Drop-off" },
+                  { key: "both" as const, label: "Pickup & drop-off" },
                 ] as const
               ).map(({ key, label }) => (
                 <label

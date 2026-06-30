@@ -24,6 +24,7 @@ type SeedFamily = {
   longitude: number;
   numberOfKids: number;
   grades: string[];
+  sharingIntent?: "PICKUP" | "DROPOFF" | "BOTH";
   status?: "ACTIVE" | "FOUND_RIDE";
   schoolSlug?: string;
 };
@@ -81,6 +82,7 @@ const families: SeedFamily[] = [
     longitude: -96.835,
     numberOfKids: 1,
     grades: ["9"],
+    sharingIntent: "DROPOFF",
   },
   {
     parentDisplayName: "Lisa W.",
@@ -108,6 +110,7 @@ const families: SeedFamily[] = [
     longitude: -96.838,
     numberOfKids: 3,
     grades: ["3", "8", "11"],
+    sharingIntent: "BOTH",
   },
   {
     parentDisplayName: "Karen H.",
@@ -121,6 +124,7 @@ const families: SeedFamily[] = [
     longitude: -96.769,
     numberOfKids: 2,
     grades: ["4", "6"],
+    sharingIntent: "DROPOFF",
   },
   {
     parentDisplayName: "Robert C.",
@@ -147,6 +151,7 @@ const families: SeedFamily[] = [
     longitude: -96.862,
     numberOfKids: 2,
     grades: ["5", "7"],
+    sharingIntent: "PICKUP",
   },
   {
     parentDisplayName: "Tom B.",
@@ -160,6 +165,7 @@ const families: SeedFamily[] = [
     longitude: -96.795,
     numberOfKids: 1,
     grades: ["6"],
+    sharingIntent: "PICKUP",
   },
 ];
 
@@ -242,7 +248,7 @@ async function main() {
         schoolId: school.id,
         schoolName: school.name,
         schoolGroup,
-        sharingIntent: "BOTH",
+        sharingIntent: family.sharingIntent ?? "BOTH",
         showPersonalInfo: true,
         pickupTimePreference: status === "ACTIVE" ? "3:35 PM" : "Flexible",
         dropoffTimePreference: status === "ACTIVE" ? "7:30 AM" : "Flexible",
