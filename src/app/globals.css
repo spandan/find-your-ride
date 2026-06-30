@@ -298,28 +298,24 @@ body {
   }
 
   .app-logo {
-    @apply inline-flex min-w-0 max-w-full items-center gap-2.5 rounded-lg transition-opacity hover:opacity-90;
+    @apply inline-flex min-w-0 max-w-full items-center gap-3 rounded-lg transition-opacity hover:opacity-90;
     color: var(--header-foreground);
   }
 
-  .app-logo__lockup {
-    @apply block max-w-[8.5rem] sm:max-w-[9.5rem];
+  .app-logo__icon-wrap {
+    @apply flex h-12 w-12 shrink-0 items-center justify-center;
   }
 
-  .app-logo__mark {
-    @apply relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50;
-  }
-
-  .app-logo__img {
-    @apply h-full w-full object-contain;
-  }
-
-  .app-logo__placeholder {
-    @apply absolute inset-0 flex items-center justify-center bg-slate-50;
+  .app-logo__icon {
+    @apply h-12 w-12 object-contain;
   }
 
   .app-logo__name {
-    @apply truncate text-sm font-bold tracking-tight sm:text-base;
+    @apply truncate text-base font-bold leading-none tracking-tight sm:text-lg;
+    background: linear-gradient(90deg, #2563eb 0%, #7c3aed 45%, #db2777 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .profile-trigger {
