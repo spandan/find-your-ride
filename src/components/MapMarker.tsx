@@ -2,7 +2,7 @@
 
 import type { SchoolGroup } from "@/generated/prisma/client";
 import type { ListingStatus } from "@/generated/prisma/client";
-import { getMarkerColor, getMarkerOpacity } from "@/lib/school";
+import { getMarkerColor, getMarkerOpacity, isFoundRideStatus } from "@/lib/school";
 
 const MARKER_SIZE = 12;
 const MARKER_SIZE_HOVER = 13;
@@ -24,6 +24,7 @@ export function MapMarker({
 }: MapMarkerProps) {
   const color = getMarkerColor(schoolGroup, status);
   const opacity = getMarkerOpacity(status);
+  const foundRide = isFoundRideStatus(status);
   const size = selected
     ? MARKER_SIZE_SELECTED
     : hovered
@@ -54,7 +55,9 @@ export function MapMarker({
           opacity,
           boxShadow: selected
             ? "0 0 0 2px #1d4ed8, 0 2px 6px rgb(15 23 42 / 0.35)"
-            : "0 1px 3px rgb(15 23 42 / 0.28)",
+            : foundRide
+              ? "0 0 0 2px white, 0 0 0 3px #92400e, 0 1px 4px rgb(15 23 42 / 0.3)"
+              : "0 1px 3px rgb(15 23 42 / 0.28)",
         }}
       />
     </div>

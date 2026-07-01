@@ -41,15 +41,9 @@ export function getMarkerColor(
     return "#64748b";
   }
 
+  // Distinct from active school colors (green / red / blue) — especially K-12 blue.
   if (status === "FOUND_RIDE") {
-    switch (schoolGroup) {
-      case "LOWER":
-        return "#15803d";
-      case "UPPER":
-        return "#b91c1c";
-      case "MIXED":
-        return "#1d4ed8";
-    }
+    return "#b45309";
   }
 
   switch (schoolGroup) {
@@ -63,7 +57,7 @@ export function getMarkerColor(
 }
 
 export function getMarkerOpacity(status: ListingStatus): number {
-  if (status === "FOUND_RIDE") return 0.88;
+  if (status === "FOUND_RIDE") return 1;
   if (status === "DEACTIVATED") return 0.75;
   return 1;
 }

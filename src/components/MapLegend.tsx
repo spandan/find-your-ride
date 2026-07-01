@@ -23,6 +23,14 @@ export function MapLegend() {
             {label}
           </li>
         ))}
+        <li className="flex items-center gap-2 text-xs text-slate-700">
+          <span
+            className="h-3 w-3 shrink-0 rounded-full shadow-sm ring-1 ring-amber-900/40"
+            style={{ backgroundColor: getMarkerColor("MIXED", "FOUND_RIDE") }}
+            aria-hidden
+          />
+          Found ride
+        </li>
       </ul>
     </div>
   );
