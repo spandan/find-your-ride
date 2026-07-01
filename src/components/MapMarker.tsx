@@ -56,7 +56,7 @@ export function MapMarker({
           boxShadow: selected
             ? "0 0 0 2px #1d4ed8, 0 2px 6px rgb(15 23 42 / 0.35)"
             : foundRide
-              ? "0 0 0 2px white, 0 0 0 3px #92400e, 0 1px 4px rgb(15 23 42 / 0.3)"
+              ? "0 0 0 1px white, 0 1px 3px rgb(15 23 42 / 0.22)"
               : "0 1px 3px rgb(15 23 42 / 0.28)",
         }}
       />

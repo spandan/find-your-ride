@@ -41,9 +41,9 @@ export function getMarkerColor(
     return "#64748b";
   }
 
-  // Distinct from active school colors (green / red / blue) — especially K-12 blue.
+  // Muted gray — clearly inactive; no longer actively looking.
   if (status === "FOUND_RIDE") {
-    return "#b45309";
+    return "#475569";
   }
 
   switch (schoolGroup) {
@@ -57,7 +57,7 @@ export function getMarkerColor(
 }
 
 export function getMarkerOpacity(status: ListingStatus): number {
-  if (status === "FOUND_RIDE") return 1;
+  if (status === "FOUND_RIDE") return 0.82;
   if (status === "DEACTIVATED") return 0.75;
   return 1;
 }
