@@ -37,8 +37,19 @@ export function getMarkerColor(
   schoolGroup: SchoolGroup,
   status: ListingStatus
 ): string {
-  if (status === "FOUND_RIDE" || status === "DEACTIVATED") {
-    return "#94a3b8";
+  if (status === "DEACTIVATED") {
+    return "#64748b";
+  }
+
+  if (status === "FOUND_RIDE") {
+    switch (schoolGroup) {
+      case "LOWER":
+        return "#15803d";
+      case "UPPER":
+        return "#b91c1c";
+      case "MIXED":
+        return "#1d4ed8";
+    }
   }
 
   switch (schoolGroup) {
@@ -52,8 +63,8 @@ export function getMarkerColor(
 }
 
 export function getMarkerOpacity(status: ListingStatus): number {
-  if (status === "FOUND_RIDE") return 0.4;
-  if (status === "DEACTIVATED") return 0.3;
+  if (status === "FOUND_RIDE") return 0.88;
+  if (status === "DEACTIVATED") return 0.75;
   return 1;
 }
 

@@ -516,6 +516,20 @@ export function AuthButtons({
     onUserChange();
   }
 
+  async function handleReactivate() {
+    setActing(true);
+    const { reactivateMyListing } = await import("@/actions/auth");
+    const result = await reactivateMyListing();
+    setActing(false);
+    if (!result.success) {
+      setMessage(result.error);
+      return;
+    }
+    setMessage("You're looking for a ride again. Your marker is active on the map.");
+    setMenuOpen(false);
+    onUserChange();
+  }
+
   async function handleFoundRide() {
     setActing(true);
     const { markFoundMyRide } = await import("@/actions/auth");
@@ -578,8 +592,8 @@ export function AuthButtons({
       {profileOpen && (
         <ProfileModal
           onClose={() => setProfileOpen(false)}
-          onSaved={() => {
-            setMessage("Profile updated.");
+          onSaved={(msg) => {
+            setMessage(msg ?? "Profile updated.");
             onUserChange();
           }}
         />
@@ -659,9 +673,9 @@ export function AuthButtons({
                 <svg className="profile-menu__icon h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Edit profile
+                Edit profile & listing
               </button>
-              {!inactive && (
+              {user.status === "ACTIVE" && (
                 <>
                   <button
                     type="button"
@@ -690,9 +704,24 @@ export function AuthButtons({
                 </>
               )}
               {inactive && (
-                <p className="px-3 py-2.5 text-xs leading-relaxed text-slate-500">
-                  Your listing is inactive on the map.
-                </p>
+                <>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={acting}
+                    onClick={handleReactivate}
+                    className="profile-menu__item"
+                  >
+                    <svg className="profile-menu__icon h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Looking for ride again
+                  </button>
+                  <p className="px-3 py-2 text-[11px] leading-relaxed text-slate-500">
+                    Update grades or address under Edit profile, then activate with
+                    your latest info.
+                  </p>
+                </>
               )}
             </div>
 

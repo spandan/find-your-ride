@@ -85,6 +85,12 @@ export type UserProfile = {
   preferredContactMethod: PreferredContactMethod;
   showPersonalInfo: boolean;
   showContactInfo: boolean;
+  status: ListingStatus;
+  grades: string[];
+  streetName: string;
+  city: string;
+  state: string;
+  sharingIntent: SharingIntent;
 };
 
 export type UpdateProfileInput = {
@@ -95,6 +101,12 @@ export type UpdateProfileInput = {
   preferredContactMethod: PreferredContactMethod;
   showPersonalInfo: boolean;
   showContactInfo: boolean;
+  grades: string[];
+  streetName: string;
+  city: string;
+  state: string;
+  sharingIntent: SharingIntent;
+  reactivate?: boolean;
 };
 
 export type GeocodeResult = {

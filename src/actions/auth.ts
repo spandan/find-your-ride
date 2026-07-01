@@ -472,6 +472,40 @@ export async function deactivateMyListing(): Promise<
   return { success: true };
 }
 
+export async function reactivateMyListing(): Promise<
+  { success: true } | { success: false; error: string }
+> {
+  const listing = await getAuthenticatedListing();
+  if (!listing) return { success: false, error: "Please log in first." };
+  if (!hasAcceptedCurrentAgreement(listing)) {
+    return { success: false, error: "Please accept the user agreement to continue." };
+  }
+
+  const fullListing = await prisma.familyListing.findUnique({
+    where: { id: listing.id },
+  });
+
+  if (!fullListing || fullListing.status === "DELETED") {
+    return { success: false, error: "Listing not found." };
+  }
+
+  if (fullListing.status === "ACTIVE") {
+    return { success: false, error: "Your listing is already active." };
+  }
+
+  await prisma.familyListing.update({
+    where: { id: fullListing.id },
+    data: {
+      status: "ACTIVE",
+      foundRideAt: null,
+      deactivatedAt: null,
+    },
+  });
+
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function getMyProfile(): Promise<UserProfile | null> {
   const listing = await getAuthenticatedListing();
   if (!listing) return null;
@@ -489,6 +523,11 @@ export async function getMyProfile(): Promise<UserProfile | null> {
       showPersonalInfo: true,
       showContactInfo: true,
       status: true,
+      grades: true,
+      streetName: true,
+      city: true,
+      state: true,
+      sharingIntent: true,
     },
   });
 
@@ -511,7 +550,14 @@ export async function updateMyProfile(
 
   const existing = await prisma.familyListing.findUnique({
     where: { id: listing.id },
-    select: { id: true, username: true, status: true },
+    select: {
+      id: true,
+      username: true,
+      status: true,
+      streetName: true,
+      city: true,
+      state: true,
+    },
   });
 
   if (!existing || existing.status === "DELETED") {
@@ -522,6 +568,18 @@ export async function updateMyProfile(
   const lastName = input.lastName.trim();
   if (!firstName || !lastName) {
     return { success: false, error: "First and last name are required." };
+  }
+
+  const grades = input.grades.map((g) => g.trim()).filter(Boolean);
+  if (grades.length === 0) {
+    return { success: false, error: "Please enter at least one grade." };
+  }
+
+  const streetName = input.streetName.trim();
+  const city = input.city.trim();
+  const state = input.state.trim().toUpperCase();
+  if (!streetName || !city || !state) {
+    return { success: false, error: "Street, city, and state are required." };
   }
 
   const contactError = validateSignupContact(
@@ -555,7 +613,40 @@ export async function updateMyProfile(
     return { success: false, error: SIGNUP_DUPLICATE_NAME_MESSAGE };
   }
 
+  const addressChanged =
+    streetName !== existing.streetName.trim() ||
+    city !== existing.city.trim() ||
+    state !== existing.state.trim().toUpperCase();
+
+  let latitude: number | undefined;
+  let longitude: number | undefined;
+  let displayLatitude: number | undefined;
+  let displayLongitude: number | undefined;
+  let locationText: string | undefined;
+
+  if (addressChanged) {
+    const geocoded = await geocodeStreetAddress(streetName, city, state);
+    if (!geocoded) {
+      return {
+        success: false,
+        error:
+          "Could not find that street in that city. Try the full street name (e.g. Main St) and city (e.g. Frisco).",
+      };
+    }
+    latitude = geocoded.latitude;
+    longitude = geocoded.longitude;
+    locationText = `${streetName}, ${city}, ${state}`;
+    const blurred = blurCoordinates(latitude, longitude, existing.id);
+    displayLatitude = blurred.latitude;
+    displayLongitude = blurred.longitude;
+  }
+
+  const schoolGroup = deriveSchoolGroup(grades);
   const lastInitial = lastName.charAt(0).toUpperCase();
+  const shouldReactivate =
+    input.reactivate &&
+    (existing.status === "FOUND_RIDE" || existing.status === "DEACTIVATED");
+
   await prisma.familyListing.update({
     where: { id: existing.id },
     data: {
@@ -567,6 +658,25 @@ export async function updateMyProfile(
       preferredContactMethod: input.preferredContactMethod,
       showPersonalInfo: input.showPersonalInfo,
       showContactInfo: input.showContactInfo,
+      grades,
+      numberOfKids: grades.length,
+      schoolGroup,
+      streetName,
+      city,
+      state,
+      sharingIntent: input.sharingIntent,
+      ...(locationText && {
+        locationText,
+        latitude,
+        longitude,
+        displayLatitude,
+        displayLongitude,
+      }),
+      ...(shouldReactivate && {
+        status: "ACTIVE",
+        foundRideAt: null,
+        deactivatedAt: null,
+      }),
     },
   });
 
